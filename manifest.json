@@ -27,8 +27,8 @@
                     "en": "Choose a path for Leed",
 		    "fr": "Choisissez un chemin pour Leed"
                 },
-                "example": "/pad",
-                "default": "/pad"
+                "example": "/leed",
+                "default": "/leed"
             },
 	    {
 		"name": "admin",
