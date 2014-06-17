@@ -16,7 +16,7 @@ fi
 # Check domain/path availability
 sudo yunohost app checkurl $domain$path -a leed
 if [[ ! $? -eq 0 ]]; then
-exit 1
+    exit 1
 fi
 
 # Add settings to YunoHost
@@ -33,17 +33,14 @@ db_user=leed
 sudo yunohost app initdb $db_user -p $db_pwd
 sudo yunohost app setting leed mysqlpwd -v $db_pwd
 
-# Create leed user
-sudo useradd -d /var/www/leed leed
-
 # Copy files to right place
 final_path=/var/www/leed
 sudo mkdir -p $final_path
 sudo cp -a ../sources/* $final_path
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/leed.conf
-sudo chown -hR leed:www-data $final_path
-sudo chown leed:www-data /home/yunohost.app/leed
-sudo chmod 755 /home/yunohost.app
+
+# Set right permissions
+sudo chown -R www-data: $final_path
 
 # Change variables in Leed configuration
 sudo sed -i "s@PATHTOCHANGE@$path@g" /etc/nginx/conf.d/$domain.d/leed.conf
