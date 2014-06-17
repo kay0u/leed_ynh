@@ -38,7 +38,7 @@ sudo useradd -d /var/www/leed leed
 
 # Copy files to right place
 final_path=/var/www/leed
-suko mkdir -p $final_path
+sudo mkdir -p $final_path
 sudo cp -a ../sources/* $final_path
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/leed.conf
 sudo chown -hR leed:www-data $final_path
