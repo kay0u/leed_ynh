@@ -1,0 +1,21 @@
+/* the humans responsible & colophon */
+/* humanstxt.org */
+
+
+/* TEAM */
+  Creator: Idleman (idleman@idleman.fr)
+  Contributors: Sbgodin (http://sbgodin.fr)
+                Simounet (contact@simounet.net)
+                Alef-Burzmali (thomas.fargeix@burzmali.com)
+                Cobalt74 (cobalt74@gmail.com)
+  Site: http://blog.idleman.fr
+  Twitter: none
+  Location: Nowhere
+
+/* THANKS */
+  Names (& URL): BoilerPlate, Modernizr, jQuery, Initializr, PHP authors & chuck norris
+
+/* SITE */
+  Standards: HTML5, CSS3
+  Components: Modernizr, jQuery
+  Software: Sublime Text2
