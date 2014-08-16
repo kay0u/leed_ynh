@@ -39,10 +39,18 @@
 		"example": "john"
 	    },
 	    {
+		"name": "password",
+		"ask": {
+		    "en": "Set the administrator password Leed",
+ 			"fr": "Définissez le mot de passe administrateur de Leed"
+		},
+		"example": "Choose a password"
+	    },
+	    {
 		"name": "language",
 		"ask": {
-		    "en": "Choose your agregator's language",
-		    "fr": "Choisissez la langue de votre agrégateur"
+		    "en": "Choose your agregator's language (inactive)",
+		    "fr": "Choisissez la langue de votre agrégateur (inactif)"
 		},
 		"choices" : ["en", "fr", "es"],
 		"default" : "en"
