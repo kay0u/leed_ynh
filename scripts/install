@@ -4,7 +4,8 @@
 domain=$1
 path=$2
 admin=$3
-language=$4
+user_pwd=$4
+language=$5
 
 # Check if admin exists
 sudo yunohost user list --json | grep -q "\"username\": \"$admin\""
@@ -17,6 +18,12 @@ fi
 sudo yunohost app checkurl $domain$path -a leed
 if [[ ! $? -eq 0 ]]; then
     exit 1
+fi
+
+# Vérifie que le mot de passe n'est pas vide.
+if [[ -z $user_pwd ]]; then
+	echo "Mot de passe incorrect"
+	exit 1
 fi
 
 # Add settings to YunoHost
@@ -47,11 +54,32 @@ sudo chown -R www-data: $final_path
 sudo sed -i "s@PATHTOCHANGE@$path@g" /etc/nginx/conf.d/$domain.d/leed.conf
 sudo sed -i "s@ALIASTOCHANGE@$final_path/@g" /etc/nginx/conf.d/$domain.d/leed.conf
 
+# Rend la page d'install publique pour curl
+sudo yunohost app setting leed skipped_uris -v "/"
+sudo yunohost app ssowatconf
+
+# Reload Nginx
+sudo service nginx reload
+
 # Leed installation via curl
 echo "127.0.0.1 $domain #yunoleed" | sudo tee -a /etc/hosts
 sleep 1
-curl -kL -X POST https://$domain$path/install.php --data "install_changeLngLeed=fr&root=$domain$path&mysqlHost=localhost&mysqlLogin=$db_login&mysqlMdp=$db_pwd&mysqlBase=$db_user&mysqlPrefix=leed_&login=$admin&password=$db_pwd" > /dev/null 2>&1
+curl -k --cookie-jar cookies.txt "https://$domain$path/install.php?installButton&install_changeLngLeed=$language&root=$domain$path&mysqlHost=localhost&mysqlLogin=$db_user&mysqlMdp=$db_pwd&mysqlBase=$db_user&mysqlPrefix=leed_&login=$admin&password=$user_pwd" > /dev/null
 
-# Reload Nginx and regenerate SSOwat conf
-sudo service nginx reload
+# Récupération du code de synchronisation
+code_sync=$(wget --load-cookies cookies.txt https://$domain$path/settings.php#preferenceBloc && cat settings.php | grep -C 1 "<p><strong>Code de synchronisation :</strong>" | sed -n 3p | sed 's/^[ \t]*//')
+
+# Mise en place du cron pour la synchronisation
+sudo crontab -l -u $admin > crontab_file
+echo "# Mise a jour de leed toutes les 2 heures." >> crontab_file
+echo "0 */2 * * * wget -q \"https://$domain$path/action.php?action=synchronize&code=$code_sync\"" >> crontab_file
+sudo crontab -u $admin crontab_file
+
+# Retire l'autorisation d'accès de la page d'install.
+sudo yunohost app setting leed skipped_uris -d
+# Rend la page d'actualisation accessible pour le script cron.
+sudo yunohost app setting leed skipped_uris -v "/action.php"
 sudo yunohost app ssowatconf
+
+# Clean hosts
+sudo sed -i '/yunoleed/d' /etc/hosts
