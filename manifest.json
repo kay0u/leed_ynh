@@ -49,8 +49,8 @@
 	    {
 		"name": "language",
 		"ask": {
-		    "en": "Choose your agregator's language (inactive)",
-		    "fr": "Choisissez la langue de votre agrégateur (inactif)"
+		    "en": "Choose your agregator's language",
+		    "fr": "Choisissez la langue de votre agrégateur"
 		},
 		"choices" : ["en", "fr", "es"],
 		"default" : "en"
