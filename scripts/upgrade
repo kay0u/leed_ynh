@@ -20,7 +20,7 @@ sudo sed -i "s@PATHTOCHANGE@$path@g" /etc/nginx/conf.d/$domain.d/leed.conf
 sudo sed -i "s@ALIASTOCHANGE@$final_path/@g" /etc/nginx/conf.d/$domain.d/leed.conf
 
 # Réglage de la langue choisie
-sed -i "s@define('LANGUAGE','.*');@define('LANGUAGE','$language');@" $final_path/constant.php
+sudo sed -i "s@define('LANGUAGE','.*');@define('LANGUAGE','$language');@" $final_path/constant.php
 
 # Make app private if necessary
 sudo yunohost app setting leed is_public -v "$is_public"
