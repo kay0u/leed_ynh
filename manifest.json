@@ -54,6 +54,15 @@
 		},
 		"choices" : ["en", "fr", "es"],
 		"default" : "en"
+	    },
+	    {
+		"name": "is_public",
+		"ask": {
+		    "en": "Is it a public website ?",
+		    "fr": "Est-ce un site public ?"
+		},
+		"choices": ["Yes", "No"],
+		"default": "No"
 	    }
         ]
     }
