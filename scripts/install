@@ -6,6 +6,7 @@ path=$2
 admin=$3
 user_pwd=$4
 language=$5
+is_public=$6
 
 # Check if admin exists
 sudo yunohost user list --json | grep -q "\"username\": \"$admin\""
@@ -75,11 +76,19 @@ echo "# Mise a jour de leed toutes les 2 heures." >> crontab_file
 echo "0 */2 * * * wget -q \"https://$domain$path/action.php?action=synchronize&code=$code_sync\"" >> crontab_file
 sudo crontab -u $admin crontab_file
 
-# Retire l'autorisation d'accès de la page d'install.
-sudo yunohost app setting leed skipped_uris -d
-# Rend la page d'actualisation accessible pour le script cron.
-sudo yunohost app setting leed skipped_uris -v "/action.php"
-sudo yunohost app ssowatconf
+# Réglage de la langue choisie
+sudo sed -i "s@define('LANGUAGE','.*');@define('LANGUAGE','$language');@" $final_path/constant.php
+
+# Make app private if necessary
+sudo yunohost app setting leed is_public -v "$is_public"
+if [ "$is_public" = "No" ];
+then
+	# Retire l'autorisation d'accès de la page d'install.
+	sudo yunohost app setting leed skipped_uris -d
+	# Rend la page d'actualisation accessible pour le script cron.
+	sudo yunohost app setting leed skipped_uris -v "/action.php"
+	sudo yunohost app ssowatconf
+fi
 
 # Clean hosts
 sudo sed -i '/yunoleed/d' /etc/hosts
