@@ -6,8 +6,8 @@
 	"fr": "Leed est un agrégateur RSS minimaliste qui permet la consultation de flux RSS de manière rapide et non intrusive."
     },
     "developer": {
-        "name": "eskuel",
-        "email": "eskuel@gmail.com",
+        "name": "Maniack Crudelis",
+        "email": "maniack@crudelis.fr",
         "url": "http://projet.idleman.fr/leed/"
     },
     "multi_instance": "true",
