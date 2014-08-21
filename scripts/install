@@ -71,6 +71,7 @@ curl -k --cookie-jar cookies.txt "https://$domain$path/install.php?installButton
 sudo sed -i "s@define('LANGUAGE','.*');@define('LANGUAGE','$language');@" $final_path/constant.php
 
 # Files owned by root, www-data can just read
+sudo mkdir $final_path/cache
 sudo find $final_path -type f | xargs sudo chmod 644
 sudo find $final_path -type d | xargs sudo chmod 755
 sudo chown -R root: $final_path
