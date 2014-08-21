@@ -56,7 +56,7 @@ sudo sed -i "s@PATHTOCHANGE@$path@g" /etc/nginx/conf.d/$domain.d/leed.conf
 sudo sed -i "s@ALIASTOCHANGE@$final_path/@g" /etc/nginx/conf.d/$domain.d/leed.conf
 
 # Rend la page d'install publique pour curl
-sudo yunohost app setting leed skipped_uris -v "/"
+sudo yunohost app setting leed unprotected_uris -v "/"	#L'usage de unprotected_uris à la place de skipped_uris permet de passer le header d'auth http
 sudo yunohost app ssowatconf
 
 # Reload Nginx
@@ -84,7 +84,7 @@ sudo yunohost app setting leed is_public -v "$is_public"
 if [ "$is_public" = "No" ];
 then
 	# Retire l'autorisation d'accès de la page d'install.
-	sudo yunohost app setting leed skipped_uris -d
+	sudo yunohost app setting leed unprotected_uris -d
 	# Rend la page d'actualisation accessible pour le script cron.
 	sudo yunohost app setting leed skipped_uris -v "/action.php"
 	sudo yunohost app ssowatconf
