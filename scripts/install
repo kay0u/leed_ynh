@@ -48,13 +48,6 @@ sudo mkdir -p $final_path
 sudo cp -a ../sources/* $final_path
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/leed.conf
 
-# Files owned by root, www-data can just read
-sudo find $final_path -type f | xargs sudo chmod 644
-sudo find $final_path -type d | xargs sudo chmod 755
-sudo chown -R root: $final_path
-# www-data can write on plugins and cache
-sudo chown -R www-data $final_path/cache $final_path/plugins
-
 # Change variables in Leed configuration
 sudo sed -i "s@PATHTOCHANGE@$path@g" /etc/nginx/conf.d/$domain.d/leed.conf
 sudo sed -i "s@ALIASTOCHANGE@$final_path/@g" /etc/nginx/conf.d/$domain.d/leed.conf
@@ -71,6 +64,16 @@ echo "127.0.0.1 $domain #yunoleed" | sudo tee -a /etc/hosts
 sleep 1
 curl -k --cookie-jar cookies.txt "https://$domain$path/install.php?installButton&install_changeLngLeed=$language&root=$domain$path&mysqlHost=localhost&mysqlLogin=$db_user&mysqlMdp=$db_pwd&mysqlBase=$db_user&mysqlPrefix=leed_&login=$admin&password=$user_pwd" > /dev/null
 
+# Réglage de la langue choisie
+sudo sed -i "s@define('LANGUAGE','.*');@define('LANGUAGE','$language');@" $final_path/constant.php
+
+# Files owned by root, www-data can just read
+sudo find $final_path -type f | xargs sudo chmod 644
+sudo find $final_path -type d | xargs sudo chmod 755
+sudo chown -R root: $final_path
+# www-data can write on plugins and cache
+sudo chown -R www-data $final_path/cache $final_path/plugins
+
 # Récupération du code de synchronisation
 code_sync=$(wget --load-cookies cookies.txt https://$domain$path/settings.php#preferenceBloc && cat settings.php | grep -C 1 "<p><strong>Code de synchronisation :</strong>" | sed -n 3p | sed 's/^[ \t]*//')
 
@@ -79,9 +82,6 @@ sudo crontab -l -u $admin > crontab_file
 echo "# Mise a jour de leed toutes les 2 heures." >> crontab_file
 echo "0 */2 * * * wget -q \"https://$domain$path/action.php?action=synchronize&code=$code_sync\"" >> crontab_file
 sudo crontab -u $admin crontab_file
-
-# Réglage de la langue choisie
-sudo sed -i "s@define('LANGUAGE','.*');@define('LANGUAGE','$language');@" $final_path/constant.php
 
 # Make app private if necessary
 sudo yunohost app setting leed is_public -v "$is_public"
