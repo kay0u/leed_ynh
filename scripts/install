@@ -48,6 +48,9 @@ sudo mkdir -p $final_path
 sudo cp -a ../sources/* $final_path
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/leed.conf
 
+# Set right permissions for curl install
+sudo chown -R www-data: $final_path
+
 # Change variables in Leed configuration
 sudo sed -i "s@PATHTOCHANGE@$path@g" /etc/nginx/conf.d/$domain.d/leed.conf
 sudo sed -i "s@ALIASTOCHANGE@$final_path/@g" /etc/nginx/conf.d/$domain.d/leed.conf
