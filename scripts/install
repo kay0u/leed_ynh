@@ -48,8 +48,12 @@ sudo mkdir -p $final_path
 sudo cp -a ../sources/* $final_path
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/leed.conf
 
-# Set right permissions
-sudo chown -R www-data: $final_path
+# Files owned by root, www-data can just read
+sudo find $final_path -type f | xargs sudo chmod 644
+sudo find $final_path -type d | xargs sudo chmod 755
+sudo chown -R root: $final_path
+# www-data can write on plugins and cache
+sudo chown -R www-data $final_path/cache $final_path/plugins
 
 # Change variables in Leed configuration
 sudo sed -i "s@PATHTOCHANGE@$path@g" /etc/nginx/conf.d/$domain.d/leed.conf
