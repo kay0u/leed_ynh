@@ -56,7 +56,7 @@ sudo sed -i "s@PATHTOCHANGE@$path@g" /etc/nginx/conf.d/$domain.d/leed.conf
 sudo sed -i "s@ALIASTOCHANGE@$final_path/@g" /etc/nginx/conf.d/$domain.d/leed.conf
 
 # Rend la page d'install publique pour curl
-sudo yunohost app setting leed unprotected_uris -v "/"	#L'usage de unprotected_uris à la place de skipped_uris permet de passer le header d'auth http
+sudo yunohost app setting leed unprotected_uris -v "/"	#L'usage de unprotected_uris a la place de skipped_uris permet de passer le header d'auth http
 sudo yunohost app ssowatconf
 
 # Reload Nginx
@@ -65,21 +65,18 @@ sudo service nginx reload
 # Leed installation via curl
 echo "127.0.0.1 $domain #yunoleed" | sudo tee -a /etc/hosts
 sleep 1
-curl -k --cookie-jar cookies.txt "https://$domain$path/install.php?installButton&install_changeLngLeed=$language&root=$domain$path&mysqlHost=localhost&mysqlLogin=$db_user&mysqlMdp=$db_pwd&mysqlBase=$db_user&mysqlPrefix=leed_&login=$admin&password=$user_pwd" > /dev/null
-
-# Réglage de la langue choisie
-sudo sed -i "s@define('LANGUAGE','.*');@define('LANGUAGE','$language');@" $final_path/constant.php
+curl -k --data "install_changeLngLeed=$language&root=$domain$path&mysqlHost=localhost&mysqlLogin=$db_user&mysqlMdp=$db_pwd&mysqlBase=$db_user&mysqlPrefix=leed_&login=$admin&password=$user_pwd" https://$domain$path/install.php?installButton > /dev/null
 
 # Files owned by root, www-data can just read
 sudo mkdir $final_path/cache
 sudo find $final_path -type f | xargs sudo chmod 644
 sudo find $final_path -type d | xargs sudo chmod 755
 sudo chown -R root: $final_path
-# www-data can write on plugins and cache
+www-data can write on plugins and cache
 sudo chown -R www-data $final_path/cache $final_path/plugins
 
 # Récupération du code de synchronisation
-code_sync=$(wget --load-cookies cookies.txt https://$domain$path/settings.php#preferenceBloc && cat settings.php | grep -C 1 "<p><strong>Code de synchronisation :</strong>" | sed -n 3p | sed 's/^[ \t]*//')
+code_sync=$(mysql -h localhost -u $db_user -p$db_pwd -s $db_user -e 'SELECT value FROM leed_configuration WHERE `key`="synchronisationCode"' | sed -n 1p)
 
 # Mise en place du cron pour la synchronisation
 sudo crontab -l -u $admin > crontab_file
