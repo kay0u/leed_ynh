@@ -81,7 +81,7 @@ code_sync=$(mysql -h localhost -u $db_user -p$db_pwd -s $db_user -e 'SELECT valu
 # Mise en place du cron pour la synchronisation
 sudo crontab -l -u $admin > crontab_file
 echo "# Mise a jour de leed toutes les 2 heures." >> crontab_file
-echo "0 */2 * * * wget -q \"https://$domain$path/action.php?action=synchronize&code=$code_sync\"" >> crontab_file
+echo "0 */2 * * * wget -q -O - \"https://$domain$path/action.php?action=synchronize&code=$code_sync\"  > /dev/null 2>&1" >> crontab_file
 sudo crontab -u $admin crontab_file
 
 # Make app private if necessary
