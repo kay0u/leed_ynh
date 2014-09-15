@@ -14,12 +14,8 @@ sudo rm -rf /var/www/leed
 # Suppression de la configuration nginx
 sudo rm -f /etc/nginx/conf.d/$domain.d/leed.conf
 
-# Retirer les lignes du crontab
-path_no_slash=$(echo $path | cut -d '/' -f 2)
-sudo crontab -l -u $admin | sudo tee crontab_file
-sudo sed -i "/Mise a jour de leed /d" crontab_file
-sudo sed -i "/$path_no_slash\/action.php?action=synchronize&code=/d" crontab_file
-sudo crontab -u $admin crontab_file
+# Retirer le cron
+sudo rm -f /etc/cron.d/leed
 
 # Reload Nginx and regenerate SSOwat conf
 sudo service nginx reload
