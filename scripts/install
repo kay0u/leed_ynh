@@ -72,7 +72,7 @@ sudo mkdir $final_path/cache
 sudo find $final_path -type f | xargs sudo chmod 644
 sudo find $final_path -type d | xargs sudo chmod 755
 sudo chown -R root: $final_path
-www-data can write on plugins and cache
+# www-data can write on plugins and cache
 sudo chown -R www-data $final_path/cache $final_path/plugins
 
 # Récupération du code de synchronisation
