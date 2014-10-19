@@ -6,7 +6,8 @@ path=$2
 admin=$3
 user_pwd=$4
 language=$5
-is_public=$6
+market=$6
+is_public=$7
 
 # Check if admin exists
 sudo yunohost user list --json | grep -q "\"username\": \"$admin\""
