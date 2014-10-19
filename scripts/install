@@ -85,6 +85,15 @@ sed -i "s@__PATH__@$path@g" ../conf/cron_leed
 sed -i "s@__CODESYNC__@$code_sync@g" ../conf/cron_leed
 sudo cp ../conf/cron_leed /etc/cron.d/leed
 
+# Activate Leed Market if necessary
+sudo yunohost app setting leed market -v "$market"
+if [ "$market" = "Yes" ];
+then
+	rm -R $final_path/plugins
+	git clone https://github.com/ldleman/Leed-market.git $final_path/plugins
+	sudo chown -R www-data: $final_path/plugins
+fi
+
 # Make app private if necessary
 sudo yunohost app setting leed is_public -v "$is_public"
 if [ "$is_public" = "No" ];
