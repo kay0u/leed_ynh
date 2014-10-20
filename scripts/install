@@ -6,7 +6,8 @@ path=$2
 admin=$3
 user_pwd=$4
 language=$5
-is_public=$6
+market=$6
+is_public=$7
 
 # Check if admin exists
 sudo yunohost user list --json | grep -q "\"username\": \"$admin\""
@@ -66,6 +67,14 @@ sudo service nginx reload
 echo "127.0.0.1 $domain #yunoleed" | sudo tee -a /etc/hosts
 sleep 1
 curl -k --data "install_changeLngLeed=$language&root=$domain$path&mysqlHost=localhost&mysqlLogin=$db_user&mysqlMdp=$db_pwd&mysqlBase=$db_user&mysqlPrefix=leed_&login=$admin&password=$user_pwd" https://$domain$path/install.php?installButton > /dev/null
+
+# Activate Leed Market if necessary
+sudo yunohost app setting leed market -v "$market"
+if [ "$market" = "Yes" ];
+then
+	sudo rm -R $final_path/plugins
+	sudo git clone https://github.com/ldleman/Leed-market.git $final_path/plugins
+fi
 
 # Files owned by root, www-data can just read
 sudo mkdir $final_path/cache

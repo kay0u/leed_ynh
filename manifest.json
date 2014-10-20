@@ -57,6 +57,15 @@
 		"default" : "en"
 	    },
 	    {
+		"name": "market",
+		"ask": {
+		    "en": "Do you want to activate the Leed Market?",
+		    "fr": "Voulez-vous activer le Leed Market ?"
+		},
+		"choices": ["Yes", "No"],
+		"default": "No"
+	    },
+	    {
 		"name": "is_public",
 		"ask": {
 		    "en": "Is it a public website ?",
