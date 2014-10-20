@@ -68,6 +68,14 @@ echo "127.0.0.1 $domain #yunoleed" | sudo tee -a /etc/hosts
 sleep 1
 curl -k --data "install_changeLngLeed=$language&root=$domain$path&mysqlHost=localhost&mysqlLogin=$db_user&mysqlMdp=$db_pwd&mysqlBase=$db_user&mysqlPrefix=leed_&login=$admin&password=$user_pwd" https://$domain$path/install.php?installButton > /dev/null
 
+# Activate Leed Market if necessary
+sudo yunohost app setting leed market -v "$market"
+if [ "$market" = "Yes" ];
+then
+	sudo rm -R $final_path/plugins
+	sudo git clone https://github.com/ldleman/Leed-market.git $final_path/plugins
+fi
+
 # Files owned by root, www-data can just read
 sudo mkdir $final_path/cache
 sudo find $final_path -type f | xargs sudo chmod 644
@@ -85,15 +93,6 @@ sed -i "s@__DOMAIN__@$domain@g" ../conf/cron_leed
 sed -i "s@__PATH__@$path@g" ../conf/cron_leed
 sed -i "s@__CODESYNC__@$code_sync@g" ../conf/cron_leed
 sudo cp ../conf/cron_leed /etc/cron.d/leed
-
-# Activate Leed Market if necessary
-sudo yunohost app setting leed market -v "$market"
-if [ "$market" = "Yes" ];
-then
-	rm -R $final_path/plugins
-	git clone https://github.com/ldleman/Leed-market.git $final_path/plugins
-	sudo chown -R www-data: $final_path/plugins
-fi
 
 # Make app private if necessary
 sudo yunohost app setting leed is_public -v "$is_public"
