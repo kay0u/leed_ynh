@@ -5,7 +5,6 @@
         "en": "Leed is a minimalistic RSS feed aggregator which allows quick and non-intrusive reading of feeds.",
 	"fr": "Leed est un agrégateur RSS minimaliste qui permet la consultation de flux RSS de manière rapide et non intrusive."
     },
-    "license": "CC by-nc-sa 2.0",
     "developer": {
         "name": "Maniack Crudelis",
         "email": "maniack@crudelis.fr",
