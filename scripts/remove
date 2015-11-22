@@ -1,22 +1,30 @@
 #!/bin/bash
 
-db_user=leed
-db_name=leed
-root_pwd=$(sudo cat /etc/yunohost/mysql)
-domain=$(sudo yunohost app setting leed domain)
-admin=$(sudo yunohost app setting leed admin)
-path=$(sudo yunohost app setting leed path)
+app=leed
 
-# Suppression de la base de donnée et son user
-mysql -u root -p$root_pwd -e "DROP DATABASE $db_name ; DROP USER $db_user@localhost ;"
-# Suppression du dossier
-sudo rm -rf /var/www/leed
+# Récupère les infos de l'application.
+root_pwd=$(sudo cat /etc/yunohost/mysql)
+domain=$(sudo yunohost app setting $app domain)
+
+# Utilise '$app' comme nom d'utilisateur et de base de donnée
+db_user=$app
+mysql -u root -p$root_pwd -e "DROP DATABASE $db_user ; DROP USER $db_user@localhost ;"
+
+# Suppression du dossier de l'application
+sudo rm -rf /var/www/$app
+
 # Suppression de la configuration nginx
-sudo rm -f /etc/nginx/conf.d/$domain.d/leed.conf
+sudo rm -f /etc/nginx/conf.d/$domain.d/$app.conf
 
 # Retirer le cron
-sudo rm -f /etc/cron.d/leed
+sudo rm -f /etc/cron.d/$app
 
-# Reload Nginx and regenerate SSOwat conf
+# Suppression de la configuration du pool php-fpm
+sudo rm -f /etc/php5/fpm/pool.d/$app.conf
+sudo rm -f /etc/php5/fpm/conf.d/20-$app.ini
+
+# Recharge la configuration Nginx et php5-fpm
 sudo service nginx reload
+# sudo service php5-fpm reload
+# Régénère la configuration de SSOwat
 sudo yunohost app ssowatconf
