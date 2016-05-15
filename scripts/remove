@@ -25,6 +25,6 @@ sudo rm -f /etc/php5/fpm/conf.d/20-$app.ini
 
 # Recharge la configuration Nginx et php5-fpm
 sudo service nginx reload
-# sudo service php5-fpm reload
+sudo service php5-fpm reload
 # Régénère la configuration de SSOwat
 sudo yunohost app ssowatconf
