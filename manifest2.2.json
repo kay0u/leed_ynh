@@ -2,9 +2,6 @@
     "name": "Leed",
     "id": "leed",
     "packaging_format": 1,
-    "requirements": {
-        "yunohost": ">= 2.4"
-    },
     "description": {
         "en": "Leed is a minimalistic RSS feed aggregator which allows quick and non-intrusive reading of feeds.",
 	"fr": "Leed est un agrégateur RSS minimaliste qui permet la consultation de flux RSS de manière rapide et non intrusive."

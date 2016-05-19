@@ -1,7 +1,12 @@
 #!/bin/bash
 
 # Récupère les infos de l'application.
-app=app_name
+version=$(sudo yunohost -v | grep "moulinette:" | cut -d' ' -f2 | cut -d'.' -f1,2)
+if [ $version = "2.4" ]; then
+	app=$YNH_APP_INSTANCE_NAME
+else
+	app=leed
+fi
 domain=$(sudo yunohost app setting $app domain)
 path=$(sudo yunohost app setting $app path)
 admin=$(sudo yunohost app setting $app admin)
@@ -72,8 +77,7 @@ else	# Si l'app est publique
 	sudo yunohost app setting $app unprotected_uris -v "/"
 fi
 
-# Recharge la configuration Nginx et php5-fpm
+# Recharge la configuration Nginx
 sudo service nginx reload
-# sudo service php5-fpm reload
 # Régénère la configuration de SSOwat
 sudo yunohost app ssowatconf
