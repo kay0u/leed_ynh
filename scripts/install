@@ -15,7 +15,7 @@ then
 	app=$YNH_APP_INSTANCE_NAME
 
 	# Source app helpers
-	. /usr/share/yunohost/helpers
+	source /usr/share/yunohost/helpers
 else
 	domain=$1
 	path=$2
@@ -30,7 +30,7 @@ fi
 
 # Delete files and db if exit with an error
 EXIT_PROPERLY () {
-	trap '' ERR
+	trap ERR
 	echo -e "\e[91m \e[1m"	# Shell in light red bold
 	echo -e "!!\n  $app install's script has encountered an error. Installation was cancelled.\n!!"
 
