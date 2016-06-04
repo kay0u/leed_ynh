@@ -27,6 +27,15 @@ else
 	app=leed
 fi
 
+# Checks variables are not empty
+test -z "$domain" && (echo "domain not set" && touch /force_stop)
+test -z "$path" && (echo "path not set" && touch /force_stop)
+test -z "$admin" && (echo "admin not set" && touch /force_stop)
+test -z "$user_pwd" && (echo "user_pwd not set" && touch /force_stop)
+test -z "$language" && (echo "language not set" && touch /force_stop)
+test -z "$market" && (echo "market not set" && touch /force_stop)
+test -z "$is_public" && (echo "is_public not set" && touch /force_stop)
+
 
 # Delete files and db if exit with an error
 EXIT_PROPERLY () {
