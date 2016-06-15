@@ -1,7 +1,9 @@
 #!/bin/bash
 
+source .fonctions	# Charge les fonctions génériques habituellement utilisées dans le script
+
 # Récupère les infos de l'application.
-version=$(sudo yunohost -v | grep "moulinette:" | cut -d' ' -f2 | cut -d'.' -f1,2)
+YNH_VERSION	# Récupère le numéro de version de Yunohost.
 if [ $version = "2.4" ]; then
 	app=$YNH_APP_INSTANCE_NAME
 else
@@ -13,16 +15,10 @@ admin=$(sudo yunohost app setting $app admin)
 is_public=$(sudo yunohost app setting $app is_public)
 
 
-# Télécharge la source
-wget -nv --show-progress -i ../sources/source_url -O leed.tar.gz
-# Vérifie la somme de contrôle de la source téléchargée.
-md5sum -c ../sources/source_md5 --status || (echo "Corrupt source" && false)
-# Décompresse la source
-tar -x -f leed.tar.gz
-# Copie les fichiers sources
-sudo cp -a $(cat ../sources/source_dir)/. "$final_path"
-# Copie les fichiers additionnels ou modifiés.
-# sudo cp -a ../sources/ajouts/. "$final_path"
+CHECK_PATH	# Vérifie et corrige la syntaxe du path.
+
+SETUP_SOURCE "leed.tar.gz"	# Télécharge la source, décompresse et copie dans $final_path
+
 # Et copie le fichier de config nginx
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
 
