@@ -71,7 +71,7 @@
 		    "fr": "Voulez-vous activer le Leed Market ?"
 		},
 		"choices": ["Yes", "No"],
-		"default": "No"
+		"default": "Yes"
 	    },
 	    {
 		"name": "is_public",

@@ -17,6 +17,9 @@ EXIT_PROPERLY () {	# Provoque l'arrêt du script en cas d'erreur. Et nettoye les
 
 	CLEAN_SETUP	# Appel la fonction de nettoyage spécifique du script install.
 
+	# Compense le bug de ssowat qui ne supprime pas l'entrée de l'app en cas d'erreur d'installation.
+	sudo sed -i "\@\"$domain$path/\":@d" /etc/ssowat/conf.json
+
 	if [ $ynh_version = "2.2" ]; then
 		/bin/bash $script_dir/remove	# Appel le script remove. En 2.2, ce comportement n'est pas automatique.
 	fi
@@ -158,7 +161,7 @@ REMOVE_LOGROTATE_CONF () {	# Suppression de la configuration de logrotate
 }
 
 REMOVE_APP_DIR () {	# Suppression du dossier de l'application
-	if [ test -n "$app" ]
+	if test -n "$app"
 	then	# Supprime le dossier seulement si $app n'est pas vide.
 		if [ -e "/var/www/$app" ]; then	# Delete final_path
 			echo "Delete app dir"
