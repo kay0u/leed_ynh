@@ -4,7 +4,7 @@ source .fonctions	# Charge les fonctions génériques habituellement utilisées 
 
 # Récupère les infos de l'application.
 YNH_VERSION	# Récupère le numéro de version de Yunohost.
-if [ $version = "2.4" ]; then
+if [ "$version" = "2.4" ]; then
 	app=$YNH_APP_INSTANCE_NAME
 else
 	app=leed
@@ -13,6 +13,8 @@ domain=$(sudo yunohost app setting $app domain)
 path=$(sudo yunohost app setting $app path)
 admin=$(sudo yunohost app setting $app admin)
 is_public=$(sudo yunohost app setting $app is_public)
+final_path=$(sudo yunohost app setting $app final_path)
+db_pwd=$(sudo yunohost app setting $app mysqlpwd)
 
 
 CHECK_PATH	# Vérifie et corrige la syntaxe du path.
@@ -28,7 +30,7 @@ sudo chown -R www-data: $final_path
 # Change variables in Leed configuration
 sudo sed -i "s@__PATH__@$path@g" /etc/nginx/conf.d/$domain.d/$app.conf
 sudo sed -i "s@__FINALPATH__@$final_path@g" /etc/nginx/conf.d/$domain.d/$app.conf
-sudo sed -i "s@NAMETOCHANGE@$app@g" /etc/nginx/conf.d/$domain.d/$app.conf
+sudo sed -i "s@__NAMETOCHANGE__@$app@g" /etc/nginx/conf.d/$domain.d/$app.conf
 
 # Créer le fichier de configuration du pool php-fpm et le configure.
 sed -i "s@__NAMETOCHANGE__@$app@g" ../conf/php-fpm.conf
@@ -49,9 +51,9 @@ sudo find $final_path -type d | xargs sudo chmod 755
 # Les fichiers appartiennent à root
 sudo chown -R root: $final_path
 
-# www-data doit avoir les droits d'écriture dans plugins et cache
-sudo mkdir $final_path/cache
-sudo chown -R www-data $final_path/cache $final_path/plugins
+# www-data doit avoir les droits d'écriture dans plugins, cache et updates
+sudo mkdir -p $final_path/cache
+sudo chown -R www-data $final_path/cache $final_path/plugins $final_path/updates
 
 
 # Récupération du code de synchronisation
@@ -65,19 +67,28 @@ sed -i "s@__PATH__@$path@g" ../conf/cron_leed
 sed -i "s@__CODESYNC__@$code_sync@g" ../conf/cron_leed
 sudo cp ../conf/cron_leed /etc/cron.d/$app
 
+# Laisse un accès libre pour curl.
+sudo yunohost app setting $app unprotected_uris -v "/"
+# Régénère la configuration de SSOwat
+sudo yunohost app ssowatconf
+# Lance la procédure de mise à jour de leed.
+curl -kL https://$domain$path
+
 # Make app private if necessary
 sudo yunohost app setting $app is_public -v "$is_public"
 if [ "$is_public" = "No" ];
 then
-	# Retire l'autorisation d'accès de la page d'install.
+	# Retire l'autorisation d'accès à leed
 	sudo yunohost app setting $app unprotected_uris -d
 	# Rend la page d'actualisation accessible pour le script cron.
 	sudo yunohost app setting $app skipped_uris -v "/action.php"
-else	# Si l'app est publique
-	sudo yunohost app setting $app unprotected_uris -v "/"
 fi
 
 # Recharge la configuration Nginx
 sudo service nginx reload
 # Régénère la configuration de SSOwat
 sudo yunohost app ssowatconf
+
+
+# Le thème par défaut présente actuellement un bug sur la langue et l'affichage du texte.
+mysql -h localhost -u $db_user -p$db_pwd -s $db_user -e 'UPDATE leed_configuration SET `value`="marigolds-old" WHERE `key`="theme"'	# On force l'ancien thème

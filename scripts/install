@@ -54,7 +54,7 @@ sudo yunohost app setting $app admin -v $admin
 sudo yunohost app setting $app language -v $language
 sudo yunohost app setting $app domain -v $domain
 
-GENERATE_DB	# Créer une base de données et un utilisateur dédié au nom de l'app.
+GENERATE_DB $app	# Créer une base de données et un utilisateur dédié au nom de l'app.
 
 
 # Crée le repertoire de destination et stocke son emplacement.
@@ -107,9 +107,9 @@ sudo find $final_path -type d | xargs sudo chmod 755
 # Les fichiers appartiennent à root
 sudo chown -R root: $final_path
 
-# www-data doit avoir les droits d'écriture dans plugins et cache
+# www-data doit avoir les droits d'écriture dans plugins, cache et updates
 sudo mkdir $final_path/cache
-sudo chown -R www-data $final_path/cache $final_path/plugins
+sudo chown -R www-data $final_path/cache $final_path/plugins $final_path/updates
 
 
 # Récupération du code de synchronisation

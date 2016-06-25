@@ -15,7 +15,7 @@ else
 fi
 domain=$(sudo yunohost app setting $app domain)
 
-REMOVE_BDD	# Suppression de la base de donnée et de l'utilisateur associé.
+REMOVE_BDD $app	# Suppression de la base de donnée et de l'utilisateur associé.
 
 REMOVE_APP_DIR	# Suppression du dossier de l'application
 
