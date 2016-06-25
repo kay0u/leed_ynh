@@ -67,6 +67,8 @@ sed -i "s@__PATH__@$path@g" ../conf/cron_leed
 sed -i "s@__CODESYNC__@$code_sync@g" ../conf/cron_leed
 sudo cp ../conf/cron_leed /etc/cron.d/$app
 
+# Vide le cache de leed pour la mise à jour
+sudo rm -r $final_path/cache/*
 # Laisse un accès libre pour curl.
 sudo yunohost app setting $app unprotected_uris -v "/"
 # Régénère la configuration de SSOwat
@@ -88,7 +90,3 @@ fi
 sudo service nginx reload
 # Régénère la configuration de SSOwat
 sudo yunohost app ssowatconf
-
-
-# Le thème par défaut présente actuellement un bug sur la langue et l'affichage du texte.
-mysql -h localhost -u $db_user -p$db_pwd -s $db_user -e 'UPDATE leed_configuration SET `value`="marigolds-old" WHERE `key`="theme"'	# On force l'ancien thème
