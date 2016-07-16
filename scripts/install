@@ -95,7 +95,7 @@ sudo yunohost app setting $app market -v "$market"
 if [ "$market" = "Yes" ];
 then
 	sudo rm -R $final_path/plugins
-	sudo git clone https://github.com/ldleman/Leed-market.git $final_path/plugins
+	sudo git clone https://github.com/ldleman/Leed-market.git "$final_path/plugins"
 fi
 
 

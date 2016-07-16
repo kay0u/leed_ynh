@@ -1,6 +1,6 @@
-## Test complet
+;; Test complet
 	auto_remove=1
-	# Manifest
+	; Manifest
 		domain="domain.tld"	(DOMAIN)
 		path="/leed"	(PATH)
 		admin="john"	(USER)
@@ -8,7 +8,8 @@
 		language="fr"
 		market="Yes"
 		is_public="Yes"	(PUBLIC|public=Yes|private=No)
-	# Checks
+	; Checks
+		pkg_linter=1
 		setup_sub_dir=1
 		setup_root=1
 		setup_nourl=0
@@ -22,5 +23,5 @@
 		incorrect_path=1
 		corrupt_source=0
 		fail_download_source=0
-		port_already_use=1
+		port_already_use=0
 		final_path_already_use=0

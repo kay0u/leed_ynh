@@ -72,7 +72,7 @@ sed -i "s@__CODESYNC__@$code_sync@g" ../conf/cron_leed
 sudo cp ../conf/cron_leed /etc/cron.d/$app
 
 # Vide le cache de leed pour la mise à jour
-sudo rm -r $final_path/cache/*
+sudo rm -rf $final_path/cache/*
 # Laisse un accès libre pour curl.
 sudo yunohost app setting $app unprotected_uris -v "/"
 # Régénère la configuration de SSOwat
