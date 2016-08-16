@@ -6,8 +6,8 @@ YNH_VERSION	# Récupère le numéro de version de Yunohost.
 
 CLEAN_SETUP () {
 # Nettoyage des résidus d'installation non pris en charge par le script remove.
-	# Clean hosts
-	sudo sed -i '/#leed/d' /etc/hosts
+# Pas de nettoyage supplémentaire nécessaire ici...
+	echo ""
 }
 TRAP_ON	# Active trap pour arrêter le script si une erreur est détectée.
 
@@ -86,9 +86,7 @@ sudo yunohost app ssowatconf
 sudo service nginx reload
 
 # Leed installation via curl
-echo "127.0.0.1 $domain #leed" | sudo tee -a /etc/hosts
-sleep 1
-curl -k --data "install_changeLngLeed=$language&root=$domain$path&mysqlHost=localhost&mysqlLogin=$db_user&mysqlMdp=$db_pwd&mysqlBase=$db_user&mysqlPrefix=leed_&login=$admin&password=$user_pwd" https://$domain$path/install.php?installButton > /dev/null
+curl -kL -H "Host: $domain" --data "install_changeLngLeed=$language&root=$domain$path&mysqlHost=localhost&mysqlLogin=$db_user&mysqlMdp=$db_pwd&mysqlBase=$db_user&mysqlPrefix=leed_&login=$admin&password=$user_pwd" https://localhost$path/install.php?installButton > /dev/null
 
 # Activate Leed Market if necessary
 sudo yunohost app setting $app market -v "$market"
@@ -133,6 +131,3 @@ then
 	sudo yunohost app setting $app skipped_uris -v "/action.php"
 	sudo yunohost app ssowatconf
 fi
-
-# Clean hosts
-sudo sed -i '/#leed/d' /etc/hosts

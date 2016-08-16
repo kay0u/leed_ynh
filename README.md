@@ -8,6 +8,6 @@ Leed est un agrégateur de flux RSS/ATOM dit KISS : minimaliste, simple, léger 
 http://leed.idleman.fr/
 
 **Mise à jour du package:**  
-sudo yunohost app upgrade leed -u https://github.com/YunoHost-Apps/leed_ynh
+sudo yunohost app upgrade --verbose leed -u https://github.com/YunoHost-Apps/leed_ynh
 
 **Multi-utilisateur:** Non, une instance par utilisateur.
