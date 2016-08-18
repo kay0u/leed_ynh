@@ -86,7 +86,8 @@ sudo yunohost app ssowatconf
 sudo service nginx reload
 
 # Leed installation via curl
-curl -kL -H "Host: $domain" --data "install_changeLngLeed=$language&root=$domain$path&mysqlHost=localhost&mysqlLogin=$db_user&mysqlMdp=$db_pwd&mysqlBase=$db_user&mysqlPrefix=leed_&login=$admin&password=$user_pwd" https://localhost$path/install.php?installButton > /dev/null
+sleep 1	# Évite un mystérieux 404...
+curl -kL -H "Host: $domain" --data "install_changeLngLeed=$language&root=$domain$path&mysqlHost=localhost&mysqlLogin=$db_user&mysqlMdp=$db_pwd&mysqlBase=$db_user&mysqlPrefix=leed_&login=$admin&password=$user_pwd" "https://localhost$path/install.php?installButton" > /dev/null
 
 # Activate Leed Market if necessary
 sudo yunohost app setting $app market -v "$market"
