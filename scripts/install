@@ -1,17 +1,26 @@
 #!/bin/bash
 
-source .fonctions	# Charge les fonctions génériques habituellement utilisées dans le script
+#=================================================
+# GENERIC STARTING
+#=================================================
+# IMPORT GENERIC HELPERS
+#=================================================
 
-CLEAN_SETUP () {
-# Nettoyage des résidus d'installation non pris en charge par le script remove.
-# Pas de nettoyage supplémentaire nécessaire ici...
-	echo ""
-}
-TRAP_ON	# Active trap pour arrêter le script si une erreur est détectée.
+source .fonctions
+source /usr/share/yunohost/helpers
 
-# Retrieve arguments
+#=================================================
+# MANAGE FAILURE OF THE SCRIPT
+#=================================================
+
+ynh_check_error	# Active trap pour arrêter le script si une erreur est détectée.
+
+#=================================================
+# RETRIEVE ARGUMENTS FROM THE MANIFEST
+#=================================================
+
 domain=$YNH_APP_ARG_DOMAIN
-path=$YNH_APP_ARG_PATH
+path_url=$YNH_APP_ARG_PATH
 admin=$YNH_APP_ARG_ADMIN
 user_pwd=$YNH_APP_ARG_PASSWORD
 language=$YNH_APP_ARG_LANGUAGE
@@ -20,49 +29,71 @@ is_public=$YNH_APP_ARG_IS_PUBLIC
 
 app=$YNH_APP_INSTANCE_NAME
 
-# Source app helpers
-source /usr/share/yunohost/helpers
-
-# Vérifie que les variables ne sont pas vides.
-CHECK_VAR "$app" "app name not set"
-
+#=================================================
+# CHECK IF THE APP CAN BE INSTALLED WITH THIS ARGS
+#=================================================
 
 CHECK_USER "$admin"	# Vérifie la validité de l'user admin
-
-CHECK_PATH	# Vérifie et corrige la syntaxe du path.
+path_url=$(ynh_normalize_url_path $path_url)	# Vérifie et corrige la syntaxe du path.
 CHECK_DOMAINPATH	# Vérifie la disponibilité du path et du domaine.
-
 CHECK_FINALPATH	# Vérifie que le dossier de destination n'est pas déjà utilisé.
 
+#=================================================
+# STORE SETTINGS FROM MANIFEST
+#=================================================
 
-# Enregistre les infos dans la config YunoHost
 ynh_app_setting_set $app admin $admin
 ynh_app_setting_set $app language $language
 ynh_app_setting_set $app domain $domain
 
-GENERATE_DB $app	# Créer une base de données et un utilisateur dédié au nom de l'app.
+#=================================================
+# STANDARD MODIFICATIONS
+#=================================================
+# CREATE A SQL BDD
+#=================================================
 
+db_name=$(ynh_make_valid_dbid $app)
+ynh_app_setting_set $app db_name $db_name
+ynh_mysql_generate_db $db_name $db_name
 
-# Crée le repertoire de destination et stocke son emplacement.
-sudo mkdir "$final_path"
+#=================================================
+# DOWNLOAD, CHECK AND UNPACK SOURCE
+#=================================================
+
 ynh_app_setting_set $app final_path $final_path
+SETUP_SOURCE	# Télécharge la source, décompresse et copie dans $final_path
 
-SETUP_SOURCE "leed.tar.gz"	# Télécharge la source, décompresse et copie dans $final_path
+#=================================================
+# NGINX CONFIGURATION
+#=================================================
 
-# Et copie le fichier de config nginx
+# Copie le fichier de config nginx
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
-
-
 # Modifie les variables dans le fichier de configuration nginx
-sudo sed -i "s@__PATH__@$path@g" /etc/nginx/conf.d/$domain.d/$app.conf
+sudo sed -i "s@__PATHTOCHANGE__@$path_url@g" /etc/nginx/conf.d/$domain.d/$app.conf
 sudo sed -i "s@__FINALPATH__@$final_path@g" /etc/nginx/conf.d/$domain.d/$app.conf
 sudo sed -i "s@__NAMETOCHANGE__@$app@g" /etc/nginx/conf.d/$domain.d/$app.conf
 
+#=================================================
+# CREATE DEDICATED USER
+#=================================================
+
+ADD_SYS_USER	# Créer un utilisateur système dédié à l'app
+
+#=================================================
+# PHP-FPM CONFIGURATION
+#=================================================
+
 POOL_FPM	# Créer le fichier de configuration du pool php-fpm et le configure.
 
+#=================================================
+# SPECIFIC SETUP
+#=================================================
+# SETTING UP WITH CURL
+#=================================================
 
 # Set right permissions for curl install
-sudo chown -R www-data: $final_path
+sudo chown -R $app: $final_path
 
 # Rend la page d'install publique pour curl
 ynh_app_setting_set $app unprotected_uris "/"	#L'usage de unprotected_uris a la place de skipped_uris permet de passer le header d'auth http
@@ -72,49 +103,62 @@ sudo yunohost app ssowatconf
 sudo service nginx reload
 
 # Leed installation via curl
-sleep 1	# Évite un mystérieux 404...
-curl -kL -H "Host: $domain" --data "install_changeLngLeed=$language&root=$domain$path&mysqlHost=localhost&mysqlLogin=$db_user&mysqlMdp=$db_pwd&mysqlBase=$db_user&mysqlPrefix=leed_&login=$admin&password=$user_pwd" "https://localhost$path/install.php?installButton" > /dev/null
+YNH_CURL "install_changeLngLeed=$language&root=$domain$path_url&mysqlHost=localhost&mysqlLogin=$db_name&mysqlMdp=$db_pwd&mysqlBase=$db_name&mysqlPrefix=leed_&login=$admin&password=$user_pwd" "/install.php?installButton"
 
-# Activate Leed Market if necessary
+#=================================================
+# ACTIVATE LEED MARKET
+#=================================================
 ynh_app_setting_get $app market "$market"
-if [ "$market" = "Yes" ];
+if [ $market -eq 1 ]
 then
 	sudo rm -R $final_path/plugins
 	sudo git clone https://github.com/ldleman/Leed-market.git "$final_path/plugins"
 fi
 
+#=================================================
+# RETRIEVE SYNCHRONISATION CODE
+#=================================================
 
-# Configure les droits d'accès au fichiers
-# -rw-r--r-- sur les fichiers
-sudo find $final_path -type f | xargs sudo chmod 644
-# drwxr-xr-x sur les dossiers
-sudo find $final_path -type d | xargs sudo chmod 755
-# Les fichiers appartiennent à root
-sudo chown -R root: $final_path
+code_sync=$(mysql -h localhost -u $db_name -p$db_pwd -s $db_name -e 'SELECT value FROM leed_configuration WHERE `key`="synchronisationCode"' | sed -n 1p)
 
-# www-data doit avoir les droits d'écriture dans plugins, cache et updates
-sudo mkdir $final_path/cache
-sudo chown -R www-data $final_path/cache $final_path/plugins $final_path/updates
+#=================================================
+# SETUP CRON FILE FOR SYNCHRONISATION
+#=================================================
 
-
-# Récupération du code de synchronisation
-code_sync=$(mysql -h localhost -u $db_user -p$db_pwd -s $db_user -e 'SELECT value FROM leed_configuration WHERE `key`="synchronisationCode"' | sed -n 1p)
-CHECK_VAR "$code_sync" "code_sync empty"
-
-# Mise en place du cron pour la synchronisation
 sed -i "s@__ADMIN__@$admin@g" ../conf/cron_leed
 sed -i "s@__DOMAIN__@$domain@g" ../conf/cron_leed
-sed -i "s@__PATH__@$path@g" ../conf/cron_leed
+sed -i "s@__PATH__@$path_url@g" ../conf/cron_leed
 sed -i "s@__CODESYNC__@$code_sync@g" ../conf/cron_leed
 sudo cp ../conf/cron_leed /etc/cron.d/$app
 
+#=================================================
+# GENERIC FINALISATION
+#=================================================
+# SECURING FILES AND DIRECTORIES
+#=================================================
+
+# Les fichiers appartiennent à root
+sudo chown -R root: $final_path
+# $app doit avoir les droits d'écriture dans plugins, cache et updates
+sudo mkdir $final_path/cache
+sudo chown -R $app $final_path/cache $final_path/plugins $final_path/updates
+
+#=================================================
+# SETUP SSOWAT
+#=================================================
+
 # Make app private if necessary
-ynh_app_setting_get $app is_public "$is_public"
-if [ "$is_public" = "No" ];
+ynh_app_setting_set $app is_public "$is_public"
+if [ $is_public -eq 0 ];
 then
 	# Retire l'autorisation d'accès de la page d'install.
 	ynh_app_setting_delete $app unprotected_uris
 	# Rend la page d'actualisation accessible pour le script cron.
 	ynh_app_setting_get $app skipped_uris "/action.php"
-	sudo yunohost app ssowatconf
 fi
+
+#=================================================
+# RELOAD NGINX
+#=================================================
+
+sudo service nginx reload

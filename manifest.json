@@ -11,7 +11,7 @@
 	},
 	"version": "1.7",
 	"url": "http://leed.idleman.fr/",
-	"license": "free",
+	"license": "CC by-nc-sa",
 	"maintainer": {
 		"name": "Maniack Crudelis",
 		"email": "maniackc_dev@crudelis.fr"
@@ -72,21 +72,21 @@
 			},
 			{
 				"name": "market",
+				"type": "boolean",
 				"ask": {
 					"en": "Do you want to activate the Leed Market?",
 					"fr": "Voulez-vous activer le Leed Market ?"
 				},
-				"choices": ["Yes", "No"],
-				"default": "Yes"
+				"default": true
 			},
 			{
 				"name": "is_public",
+				"type": "boolean",
 				"ask": {
 					"en": "Is it a public website ?",
 					"fr": "Est-ce un site public ?"
 				},
-				"choices": ["Yes", "No"],
-				"default": "No"
+				"default": false
 			}
 		]
 	}

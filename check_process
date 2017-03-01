@@ -6,8 +6,8 @@
 		admin="john"	(USER)
 		password="pass"	(PASSWORD)
 		language="fr"
-		market="Yes"
-		is_public="Yes"	(PUBLIC|public=Yes|private=No)
+		market=1
+		is_public=1	(PUBLIC|public=1|private=0)
 	; Checks
 		pkg_linter=1
 		setup_sub_dir=1

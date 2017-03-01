@@ -1,37 +1,94 @@
 #!/bin/bash
 
-# Source app helpers
+#=================================================
+# GENERIC STARTING
+#=================================================
+# MANAGE FAILURE OF THE SCRIPT
+#=================================================
+
+# Exit on command errors and treat unset variables as an error
+set -eu
+
+#=================================================
+# IMPORT GENERIC HELPERS
+#=================================================
+
 source /usr/share/yunohost/helpers
 
-# Récupère les infos de l'application.
+#=================================================
+# LOAD SETTINGS
+#=================================================
+
 app=$YNH_APP_INSTANCE_NAME
-if [ -z "$app" ]; then
-	app=leed
-fi
-final_path=$(ynh_app_setting_get $app final_path)
+
 domain=$(ynh_app_setting_get $app domain)
+path_url=$(ynh_app_setting_get $app path)
+final_path=$(ynh_app_setting_get $app final_path)
+db_name=$(ynh_app_setting_get $app db_name)
 
-# The parameter $1 is the uncompressed restore directory location
-backup_dir=$1/apps/$app
+#=================================================
+# CHECK IF THE APP CAN BE RESTORED
+#=================================================
 
-# Restore sources & data
-sudo cp -a $backup_dir/sources/. $final_path
+sudo yunohost app checkurl "${domain}${path_url}" -a "$app" \
+	|| ynh_die "Path not available: ${domain}${path_url}"
+test ! -d $final_path \
+	|| ynh_die "There is already a directory: $final_path "
 
-# Créer la base de donnée et la restaure
+#=================================================
+# STANDARD RESTORE STEPS
+#=================================================
+# RESTORE OF THE NGINX CONFIGURATION
+#=================================================
+
+conf=/etc/nginx/conf.d/$domain.d/$app.conf
+if [ -f $conf ]; then
+    ynh_die "There is already a nginx conf file at this path: $conf "
+fi
+sudo cp -a ./nginx.conf $conf
+
+#=================================================
+# RESTORE OF THE MAIN DIR OF THE APP
+#=================================================
+
+sudo cp -a ./sources/. $final_path
+
+#=================================================
+# RESTORE OF THE SQL BDD
+#=================================================
+
 db_pwd=$(ynh_app_setting_get $app mysqlpwd)
-db_user=$app
-ynh_mysql_create_db $db_user $db_user $db_pwd
-mysql --debug-check -u $db_user -p$db_pwd $db_user < ${backup_dir}/db.sql
+ynh_mysql_create_db $db_name $db_name $db_pwd
+ynh_mysql_connect_as $db_name $db_pwd $db_name < ./db.sql
 
-# Restore Nginx and YunoHost parameters
-sudo cp -a $backup_dir/yunohost/. /etc/yunohost/apps/$app
-sudo cp -a $backup_dir/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
+#=================================================
+# RECREATE THE DEDICATED USER
+#=================================================
 
-# Copy dedicated php-fpm process from backup folder to the right location
-sudo cp -a $backup_dir/php-fpm.conf /etc/php5/fpm/pool.d/$app.conf
-sudo cp -a $backup_dir/php-fpm.ini /etc/php5/fpm/conf.d/20-$app.ini
-# And restart service
+if ! ynh_system_user_exists "$app"	# Test l'existence de l'utilisateur
+then
+	sudo useradd -d /var/www/$app --system --user-group $app --shell /usr/sbin/nologin || ynh_die "Unable to create $app system account"
+fi
+
+#=================================================
+# RESTORE OF THE PHP-FPM CONFIGURATION
+#=================================================
+
+sudo cp -a ./php-fpm.conf /etc/php5/fpm/pool.d/$app.conf
+sudo cp -a ./php-fpm.ini /etc/php5/fpm/conf.d/20-$app.ini
+
+#=================================================
+# SPECIFIC RESTORE
+#=================================================
+# RESTORE OF THE CRON FILE
+#=================================================
+sudo cp -a "cron" "/etc/cron.d/$app"
+
+#=================================================
+# GENERIC FINALISATION
+#=================================================
+# RELOAD NGINX AND PHP-FPM
+#=================================================
+
 sudo service php5-fpm reload
-
-# Restart webserver
 sudo service nginx reload
