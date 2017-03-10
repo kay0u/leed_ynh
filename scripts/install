@@ -108,7 +108,7 @@ YNH_CURL "install_changeLngLeed=$language&root=$domain$path_url&mysqlHost=localh
 #=================================================
 # ACTIVATE LEED MARKET
 #=================================================
-ynh_app_setting_get $app market "$market"
+ynh_app_setting_set $app market "$market"
 if [ $market -eq 1 ]
 then
 	sudo rm -R $final_path/plugins
@@ -154,7 +154,7 @@ then
 	# Retire l'autorisation d'accès de la page d'install.
 	ynh_app_setting_delete $app unprotected_uris
 	# Rend la page d'actualisation accessible pour le script cron.
-	ynh_app_setting_get $app skipped_uris "/action.php"
+	ynh_app_setting_set $app skipped_uris "/action.php"
 fi
 
 #=================================================

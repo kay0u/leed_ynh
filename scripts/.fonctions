@@ -64,6 +64,22 @@ SETUP_SOURCE () {	# Télécharge la source, décompresse et copie dans $final_pa
 	fi
 }
 
+SETUP_SOURCE_ZIP () {	# Télécharge la source, décompresse et copie dans $final_path
+	src_url=$(cat ../conf/app.src | grep SOURCE_URL | cut -d= -f2)
+	src_checksum=$(cat ../conf/app.src | grep SOURCE_SUM | cut -d= -f2)
+	# Download sources from the upstream
+	wget -nv -O source.zip $src_url
+	# Vérifie la somme de contrôle de la source téléchargée.
+	echo "$src_checksum source.zip" | md5sum -c --status || ynh_die "Corrupt source"
+	# Extract source into the app dir
+	sudo mkdir -p $final_path
+	sudo unzip -quo source.zip -d $final_path
+	# Copie les fichiers additionnels ou modifiés.
+	if test -e "../sources/ajouts"; then
+		sudo cp -a ../sources/ajouts/. "$final_path"
+	fi
+}
+
 ADD_SYS_USER () {   # Créer un utilisateur système dédié à l'app
         if ! ynh_system_user_exists "$app"	# Test l'existence de l'utilisateur
         then
@@ -349,7 +365,7 @@ Section: misc
 Priority: optional
 Package: ${dep_app}-ynh-deps
 Version: ${version}
-Depends: ${dependencies}
+Depends: ${dependencies// /, }
 Architecture: all
 Description: Fake package for ${app} (YunoHost app) dependencies
  This meta-package is only responsible of installing its dependencies.
@@ -364,7 +380,7 @@ EOF
 #
 # usage: ynh_remove_app_dependencies
 ynh_remove_app_dependencies () {
-    dep_app=${app/_/-}	# Replace all '_' by '-'
+    dep_app=${app//_/-}	# Replace all '_' by '-'
     ynh_package_autoremove ${dep_app}-ynh-deps	# Remove the fake package and its dependencies if they not still used.
 }
 
@@ -380,7 +396,7 @@ ynh_remove_app_dependencies () {
 #
 # It's possible to use this helper several times, each config will added to same logrotate config file.
 ynh_use_logrotate () {
-	if [ -n "$1" ]; then
+	if [ "$#" -gt 0 ]; then
 		if [ "$(echo ${1##*.})" == "log" ]; then	# Keep only the extension to check if it's a logfile
 			logfile=$1	# In this case, focus logrotate on the logfile
 		else

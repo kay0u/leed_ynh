@@ -82,7 +82,14 @@ sudo cp -a ./php-fpm.ini /etc/php5/fpm/conf.d/20-$app.ini
 #=================================================
 # RESTORE OF THE CRON FILE
 #=================================================
+
 sudo cp -a "cron" "/etc/cron.d/$app"
+
+#=================================================
+# RESTORE USER RIGHTS
+#=================================================
+
+sudo chown -R $app $final_path/cache $final_path/plugins $final_path/updates
 
 #=================================================
 # GENERIC FINALISATION
