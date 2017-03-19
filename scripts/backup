@@ -13,6 +13,12 @@ set -eu
 # IMPORT GENERIC HELPERS
 #=================================================
 
+if [ ! -e .fonctions ]; then
+	# Rapatrie le fichier de fonctions si il n'est pas dans le dossier courant
+	sudo cp ../settings/scripts/.fonctions ./.fonctions
+	sudo chmod a+rx .fonctions
+fi
+source .fonctions
 source /usr/share/yunohost/helpers
 
 #=================================================
@@ -32,6 +38,7 @@ db_pwd=$(ynh_app_setting_get "$app" mysqlpwd)
 # BACKUP OF THE MAIN DIR OF THE APP
 #=================================================
 
+CHECK_SIZE "$final_path"
 ynh_backup "$final_path" "sources"
 
 #=================================================
@@ -51,7 +58,9 @@ ynh_backup "/etc/php5/fpm/conf.d/20-$app.ini" "php-fpm.ini"
 # BACKUP OF THE SQL BDD
 #=================================================
 
-mysqldump -u "$db_name" -p"$db_pwd" --no-create-db "$db_name" > ./db.sql
+ynh_mysql_dump_db "$db_name" > dump.sql
+CHECK_SIZE "dump.sql"
+ynh_backup "dump.sql" "db.sql"
 
 #=================================================
 # SPECIFIC BACKUP

@@ -24,24 +24,24 @@ CHECK_FINALPATH () {	# Vérifie que le dossier de destination n'est pas déjà u
 
 NO_PRINT () {	# Supprime l'affichage dans stdout pour la commande en argument.
 	set +x
-	eval "$@"
+	$@
 	set -x
 }
 
 WARNING () {	# Écrit sur le canal d'erreur pour passer en warning.
-	eval "$@" >&2
+	$@ >&2
 }
 
 SUPPRESS_WARNING () {	# Force l'écriture sur la sortie standard
-	eval "$@" 2>&1
+	$@ 2>&1
 }
 
 QUIET () {	# Redirige la sortie standard dans /dev/null
-	eval "$@" > /dev/null
+	$@ > /dev/null
 }
 
 ALL_QUIET () {	# Redirige la sortie standard et d'erreur dans /dev/null
-	eval "$@" > /dev/null 2>&1
+	$@ > /dev/null 2>&1
 }
 
 #=================================================
@@ -49,7 +49,7 @@ ALL_QUIET () {	# Redirige la sortie standard et d'erreur dans /dev/null
 #=================================================
 
 SETUP_SOURCE () {	# Télécharge la source, décompresse et copie dans $final_path
-	src_url=$(cat ../conf/app.src | grep SOURCE_URL | cut -d= -f2)
+	src_url=$(cat ../conf/app.src | grep SOURCE_URL | cut -d'>' -f2)
 	src_checksum=$(cat ../conf/app.src | grep SOURCE_SUM | cut -d= -f2)
 	# Download sources from the upstream
 	wget -nv -O source.tar.gz $src_url
@@ -65,7 +65,7 @@ SETUP_SOURCE () {	# Télécharge la source, décompresse et copie dans $final_pa
 }
 
 SETUP_SOURCE_ZIP () {	# Télécharge la source, décompresse et copie dans $final_path
-	src_url=$(cat ../conf/app.src | grep SOURCE_URL | cut -d= -f2)
+	src_url=$(cat ../conf/app.src | grep SOURCE_URL | cut -d'>' -f2)
 	src_checksum=$(cat ../conf/app.src | grep SOURCE_SUM | cut -d= -f2)
 	# Download sources from the upstream
 	wget -nv -O source.zip $src_url
@@ -73,18 +73,14 @@ SETUP_SOURCE_ZIP () {	# Télécharge la source, décompresse et copie dans $fina
 	echo "$src_checksum source.zip" | md5sum -c --status || ynh_die "Corrupt source"
 	# Extract source into the app dir
 	sudo mkdir -p $final_path
-	sudo unzip -quo source.zip -d $final_path
+	temp_dir=$(mktemp -d)
+	unzip -quo source.zip -d $temp_dir	# On passe par un dossier temporaire car unzip ne permet pas d'ignorer le dossier parent.
+	sudo cp -a $temp_dir/*/. $final_path
+	rm -r $temp_dir
 	# Copie les fichiers additionnels ou modifiés.
 	if test -e "../sources/ajouts"; then
 		sudo cp -a ../sources/ajouts/. "$final_path"
 	fi
-}
-
-ADD_SYS_USER () {   # Créer un utilisateur système dédié à l'app
-        if ! ynh_system_user_exists "$app"	# Test l'existence de l'utilisateur
-        then
-            sudo useradd -d /var/www/$app --system --user-group $app --shell /usr/sbin/nologin || ynh_die "Unable to create $app system account"
-        fi
 }
 
 POOL_FPM () {	# Créer le fichier de configuration du pool php-fpm et le configure.
@@ -97,14 +93,14 @@ POOL_FPM () {	# Créer le fichier de configuration du pool php-fpm et le configu
 	finalphpini=/etc/php5/fpm/conf.d/20-$app.ini
 	sudo cp ../conf/php-fpm.ini $finalphpini
 	sudo chown root: $finalphpini
-	sudo service php5-fpm reload
+	sudo systemctl reload php5-fpm
 }
 
 YNH_CURL () {
 	data_post=$1
 	url_access=$2
 	sleep 1
-	SUPPRESS_WARNING curl -kL -H \"Host: $domain\" --resolve $domain:443:127.0.0.1 --data \"$data_post\" \"https://localhost$path_url$url_access\"
+	curl -kL -H "Host: $domain" --resolve $domain:443:127.0.0.1 --data "$data_post" "https://localhost$path_url$url_access" 2>&1
 }
 
 #=================================================
@@ -115,7 +111,7 @@ REMOVE_NGINX_CONF () {	# Suppression de la configuration nginx
 	if [ -e "/etc/nginx/conf.d/$domain.d/$app.conf" ]; then	# Delete nginx config
 		echo "Delete nginx config"
 		sudo rm "/etc/nginx/conf.d/$domain.d/$app.conf"
-		sudo service nginx reload
+		sudo systemctl reload nginx
 	fi
 }
 
@@ -128,7 +124,7 @@ REMOVE_FPM_CONF () {	# Suppression de la configuration du pool php-fpm
 		echo "Delete php config"
 		sudo rm "/etc/php5/fpm/conf.d/20-$app.ini"
 	fi
-	sudo service php5-fpm reload
+	sudo systemctl reload php5-fpm
 }
 
 SECURE_REMOVE () {      # Suppression de dossier avec vérification des variables
@@ -159,22 +155,16 @@ SECURE_REMOVE () {      # Suppression de dossier avec vérification des variable
 	fi
 }
 
-REMOVE_SYS_USER () {   # Supprime l'utilisateur système dédié à l'app
-    if ynh_system_user_exists "$app"	# Test l'existence de l'utilisateur
-    then
-    	sudo userdel $app
-    fi
-}
-
 #=================================================
 # BACKUP
 #=================================================
 
 BACKUP_FAIL_UPGRADE () {
 	WARNING echo "Upgrade failed."
-	if ALL_QUIET sudo yunohost backup list | grep -q $app-before-upgrade$backup_number; then	# Vérifie l'existence de l'archive avant de supprimer l'application et de restaurer
+	app_bck=${app//_/-}	# Replace all '_' by '-'
+	if sudo yunohost backup list | grep -q $app_bck-pre-upgrade$backup_number; then	# Vérifie l'existence de l'archive avant de supprimer l'application et de restaurer
 		sudo yunohost app remove $app	# Supprime l'application avant de la restaurer.
-		sudo yunohost backup restore --ignore-hooks $app-before-upgrade$backup_number --apps $app --force	# Restore the backup if upgrade failed
+		sudo yunohost backup restore --ignore-hooks $app_bck-pre-upgrade$backup_number --apps $app --force	# Restore the backup if upgrade failed
 		ynh_die "The app was restored to the way it was before the failed upgrade."
 	fi
 }
@@ -182,18 +172,37 @@ BACKUP_FAIL_UPGRADE () {
 BACKUP_BEFORE_UPGRADE () {	# Backup the current version of the app, restore it if the upgrade fails
 	backup_number=1
 	old_backup_number=2
-	if ALL_QUIET sudo yunohost backup list | grep -q $app-before-upgrade1; then	# Vérifie l'existence d'une archive déjà numéroté à 1.
+	app_bck=${app//_/-}	# Replace all '_' by '-'
+	if sudo yunohost backup list | grep -q $app_bck-pre-upgrade1; then	# Vérifie l'existence d'une archive déjà numéroté à 1.
 		backup_number=2	# Et passe le numéro de l'archive à 2
 		old_backup_number=1
 	fi
 
-	sudo yunohost backup create --ignore-hooks --apps $app --name $app-before-upgrade$backup_number	# Créer un backup différent de celui existant.
+	sudo yunohost backup create --ignore-hooks --apps $app --name $app_bck-pre-upgrade$backup_number	# Créer un backup différent de celui existant.
 	if [ "$?" -eq 0 ]; then	# Si le backup est un succès, supprime l'archive précédente.
-		if ALL_QUIET sudo yunohost backup list | grep -q $app-before-upgrade$old_backup_number; then	# Vérifie l'existence de l'ancienne archive avant de la supprimer, pour éviter une erreur.
-			QUIET sudo yunohost backup delete $app-before-upgrade$old_backup_number
+		if sudo yunohost backup list | grep -q $app_bck-pre-upgrade$old_backup_number; then	# Vérifie l'existence de l'ancienne archive avant de la supprimer, pour éviter une erreur.
+			QUIET sudo yunohost backup delete $app_bck-pre-upgrade$old_backup_number
 		fi
 	else	# Si le backup a échoué
 		ynh_die "Backup failed, the upgrade process was aborted."
+	fi
+}
+
+HUMAN_SIZE () {	# Transforme une taille en Ko en une taille lisible pour un humain
+	human=$(numfmt --to=iec --from-unit=1K $1)
+	echo $human
+}
+
+CHECK_SIZE () {	# Vérifie avant chaque backup que l'espace est suffisant
+	file_to_analyse=$1
+	backup_size=$(sudo du --summarize "$file_to_analyse" | cut -f1)
+	free_space=$(sudo df --output=avail "/home/yunohost.backup" | sed 1d)
+
+	if [ $free_space -le $backup_size ]
+	then
+		WARNING echo "Espace insuffisant pour sauvegarder $file_to_analyse."
+		WARNING echo "Espace disponible: $(HUMAN_SIZE $free_space)"
+		ynh_die "Espace nécessaire: $(HUMAN_SIZE $backup_size)"
 	fi
 }
 
@@ -342,17 +351,17 @@ ynh_exit_properly () {
 # Stop immediatly the execution if an error occured or if a empty variable is used.
 # The execution of the script is derivate to ynh_exit_properly function before exit.
 #
-# Usage: ynh_check_error
-ynh_check_error () {
+# Usage: ynh_abort_if_errors
+ynh_abort_if_errors () {
 	set -eu	# Exit if a command fail, and if a variable is used unset.
 	trap ynh_exit_properly EXIT	# Capturing exit signals on shell script
 }
 
 # Install dependencies with a equivs control file
 #
-# usage: ynh_app_dependencies dep [dep [...]]
+# usage: ynh_install_app_dependencies dep [dep [...]]
 # | arg: dep - the package name to install in dependence
-ynh_app_dependencies () {
+ynh_install_app_dependencies () {
     dependencies=$@
     manifest_path="../manifest.json"
     if [ ! -e "$manifest_path" ]; then
@@ -360,7 +369,11 @@ ynh_app_dependencies () {
     fi
     version=$(sudo python3 -c "import sys, json;print(json.load(open(\"$manifest_path\"))['version'])")	# Retrieve the version number in the manifest file.
     dep_app=${app//_/-}	# Replace all '_' by '-'
-    cat > ./${dep_app}-ynh-deps.control << EOF	# Make a control file for equivs-build
+
+    if ynh_package_is_installed "${dep_app}-ynh-deps"; then
+		echo "A package named ${dep_app}-ynh-deps is already installed" >&2
+    else
+		cat > ./${dep_app}-ynh-deps.control << EOF	# Make a control file for equivs-build
 Section: misc
 Priority: optional
 Package: ${dep_app}-ynh-deps
@@ -370,8 +383,10 @@ Architecture: all
 Description: Fake package for ${app} (YunoHost app) dependencies
  This meta-package is only responsible of installing its dependencies.
 EOF
-    ynh_package_install_from_equivs ./${dep_app}-ynh-deps.control \
-        || ynh_die "Unable to install dependencies"	# Install the fake package and its dependencies
+		ynh_package_install_from_equivs ./${dep_app}-ynh-deps.control \
+			|| ynh_die "Unable to install dependencies"	# Install the fake package and its dependencies
+		ynh_app_setting_set $app apt_dependencies $dependencies
+	fi
 }
 
 # Remove fake package and its dependencies
@@ -452,4 +467,35 @@ ynh_find_port () {
 		port=$((port+1))	# Else, pass to next port
 	done
 	echo $port
+}
+
+# Create a system user
+#
+# usage: ynh_system_user_create user_name [home_dir]
+# | arg: user_name - Name of the system user that will be create
+# | arg: home_dir - Path of the home dir for the user. Usually the final path of the app. If this argument is omitted, the user will be created without home
+ynh_system_user_create () {
+	if ! ynh_system_user_exists "$1"	# Check if the user exists on the system
+	then	# If the user doesn't exist
+		if [ $# -ge 2 ]; then	# If a home dir is mentioned
+			user_home_dir="-d $2"
+		else
+			user_home_dir="--no-create-home"
+		fi
+		sudo useradd $user_home_dir --system --user-group $1 --shell /usr/sbin/nologin || ynh_die "Unable to create $1 system account"
+	fi
+}
+
+# Delete a system user
+#
+# usage: ynh_system_user_delete user_name
+# | arg: user_name - Name of the system user that will be create
+ynh_system_user_delete () {
+    if ynh_system_user_exists "$1"	# Check if the user exists on the system
+    then
+		echo "Remove the user $1" >&2
+		sudo userdel $1
+	else
+		echo "The user $1 was not found" >&2
+    fi
 }

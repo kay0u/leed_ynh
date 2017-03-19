@@ -13,7 +13,7 @@ source /usr/share/yunohost/helpers
 # MANAGE FAILURE OF THE SCRIPT
 #=================================================
 
-ynh_check_error	# Active trap pour arrêter le script si une erreur est détectée.
+ynh_abort_if_errors	# Active trap pour arrêter le script si une erreur est détectée.
 
 #=================================================
 # RETRIEVE ARGUMENTS FROM THE MANIFEST
@@ -78,7 +78,7 @@ sudo sed -i "s@__NAMETOCHANGE__@$app@g" /etc/nginx/conf.d/$domain.d/$app.conf
 # CREATE DEDICATED USER
 #=================================================
 
-ADD_SYS_USER	# Créer un utilisateur système dédié à l'app
+ynh_system_user_create $app	# Créer un utilisateur système dédié à l'app
 
 #=================================================
 # PHP-FPM CONFIGURATION
@@ -100,7 +100,7 @@ ynh_app_setting_set $app unprotected_uris "/"	#L'usage de unprotected_uris a la 
 sudo yunohost app ssowatconf
 
 # Reload Nginx
-sudo service nginx reload
+sudo systemctl reload nginx
 
 # Leed installation via curl
 YNH_CURL "install_changeLngLeed=$language&root=$domain$path_url&mysqlHost=localhost&mysqlLogin=$db_name&mysqlMdp=$db_pwd&mysqlBase=$db_name&mysqlPrefix=leed_&login=$admin&password=$user_pwd" "/install.php?installButton"
@@ -161,4 +161,4 @@ fi
 # RELOAD NGINX
 #=================================================
 
-sudo service nginx reload
+sudo systemctl reload nginx

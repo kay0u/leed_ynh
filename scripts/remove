@@ -61,4 +61,4 @@ fi
 # REMOVE DEDICATED USER
 #=================================================
 
-REMOVE_SYS_USER
+ynh_system_user_delete $app

@@ -31,10 +31,12 @@ if [ -z $final_path ]; then	# Si final_path n'est pas renseigné dans app settin
 	final_path=/var/www/$app
 	ynh_app_setting_set $app final_path $final_path
 fi
+
 if [ -z $db_name ]; then	# Si db_name n'est pas renseigné dans app setting
 	db_name=$(ynh_make_valid_dbid $app)
 	ynh_app_setting_set $app db_name $db_name
 fi
+
 if [ -z "$is_public" ]; then	# Raté avec get au lieu de set...
 	public_check=$(ynh_app_setting_get $app skipped_uris)
 	if [ -z "$public_check" ]; then	# Si skipped_uris est vide, c'était une install publique.
@@ -52,6 +54,7 @@ else
 		is_public=0
 	fi
 fi
+
 market=$(ynh_app_setting_get $app market)
 if [ "$market" = "Yes" ]; then
 	ynh_app_setting_set $app market 1	# Fixe market en booléen
@@ -67,7 +70,7 @@ BACKUP_BEFORE_UPGRADE	# Backup the current version of the app
 ynh_clean_setup () {
 	BACKUP_FAIL_UPGRADE	# restore it if the upgrade fails
 }
-ynh_check_error	# Active trap pour arrêter le script si une erreur est détectée.
+ynh_abort_if_errors	# Active trap pour arrêter le script si une erreur est détectée.
 
 #=================================================
 # CHECK THE PATH
@@ -98,7 +101,7 @@ sudo sed -i "s@__NAMETOCHANGE__@$app@g" /etc/nginx/conf.d/$domain.d/$app.conf
 # CREATE DEDICATED USER
 #=================================================
 
-ADD_SYS_USER	# Créer un utilisateur système dédié à l'app
+ynh_system_user_create $app	# Create the dedicated user, if not exist
 
 #=================================================
 # PHP-FPM CONFIGURATION
@@ -167,4 +170,4 @@ fi
 # RELOAD NGINX
 #=================================================
 
-sudo service nginx reload
+sudo systemctl reload nginx
