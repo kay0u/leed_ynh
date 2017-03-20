@@ -55,13 +55,6 @@ else
 	fi
 fi
 
-market=$(ynh_app_setting_get $app market)
-if [ "$market" = "Yes" ]; then
-	ynh_app_setting_set $app market 1	# Fixe market en booléen
-elif [ "$market" = "No" ]; then
-	ynh_app_setting_set $app market 0
-fi
-
 #=================================================
 # BACKUP BEFORE UPGRADE THEN ACTIVE TRAP
 #=================================================

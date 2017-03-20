@@ -24,7 +24,6 @@ path_url=$YNH_APP_ARG_PATH
 admin=$YNH_APP_ARG_ADMIN
 user_pwd=$YNH_APP_ARG_PASSWORD
 language=$YNH_APP_ARG_LANGUAGE
-market=$YNH_APP_ARG_MARKET
 is_public=$YNH_APP_ARG_IS_PUBLIC
 
 app=$YNH_APP_INSTANCE_NAME
@@ -104,16 +103,6 @@ sudo systemctl reload nginx
 
 # Leed installation via curl
 YNH_CURL "install_changeLngLeed=$language&root=$domain$path_url&mysqlHost=localhost&mysqlLogin=$db_name&mysqlMdp=$db_pwd&mysqlBase=$db_name&mysqlPrefix=leed_&login=$admin&password=$user_pwd" "/install.php?installButton"
-
-#=================================================
-# ACTIVATE LEED MARKET
-#=================================================
-ynh_app_setting_set $app market "$market"
-if [ $market -eq 1 ]
-then
-	sudo rm -R $final_path/plugins
-	sudo git clone https://github.com/ldleman/Leed-market.git "$final_path/plugins"
-fi
 
 #=================================================
 # RETRIEVE SYNCHRONISATION CODE

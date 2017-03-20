@@ -9,9 +9,9 @@
 		"en": "Leed is a minimalistic RSS feed aggregator which allows quick and non-intrusive reading of feeds.",
 		"fr": "Leed est un agrégateur RSS minimaliste qui permet la consultation de flux RSS de manière rapide et non intrusive."
 	},
-	"version": "1.7",
+	"version": "1.8.2",
 	"url": "http://leed.idleman.fr/",
-	"license": "CC by-nc-sa",
+	"license": "AGPL-3.0",
 	"maintainer": {
 		"name": "Maniack Crudelis",
 		"email": "maniackc_dev@crudelis.fr"
@@ -69,15 +69,6 @@
 				},
 				"choices" : ["en", "fr", "es"],
 				"default" : "en"
-			},
-			{
-				"name": "market",
-				"type": "boolean",
-				"ask": {
-					"en": "Do you want to activate the Leed Market?",
-					"fr": "Voulez-vous activer le Leed Market ?"
-				},
-				"default": true
 			},
 			{
 				"name": "is_public",
