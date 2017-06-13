@@ -32,7 +32,6 @@ app=$YNH_APP_INSTANCE_NAME
 # CHECK IF THE APP CAN BE INSTALLED WITH THIS ARGS
 #=================================================
 
-CHECK_USER "$admin"	# Vérifie la validité de l'user admin
 path_url=$(ynh_normalize_url_path $path_url)	# Vérifie et corrige la syntaxe du path.
 CHECK_DOMAINPATH	# Vérifie la disponibilité du path et du domaine.
 CHECK_FINALPATH	# Vérifie que le dossier de destination n'est pas déjà utilisé.
@@ -51,27 +50,22 @@ ynh_app_setting_set $app domain $domain
 # CREATE A SQL BDD
 #=================================================
 
-db_name=$(ynh_make_valid_dbid $app)
+db_name=$(ynh_sanitize_dbid $app)
 ynh_app_setting_set $app db_name $db_name
-ynh_mysql_generate_db $db_name $db_name
+ynh_mysql_setup_db $db_name $db_name
 
 #=================================================
 # DOWNLOAD, CHECK AND UNPACK SOURCE
 #=================================================
 
 ynh_app_setting_set $app final_path $final_path
-SETUP_SOURCE	# Télécharge la source, décompresse et copie dans $final_path
+ynh_setup_source "$final_path"	# Télécharge la source, décompresse et copie dans $final_path
 
 #=================================================
 # NGINX CONFIGURATION
 #=================================================
 
-# Copie le fichier de config nginx
-sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
-# Modifie les variables dans le fichier de configuration nginx
-sudo sed -i "s@__PATHTOCHANGE__@$path_url@g" /etc/nginx/conf.d/$domain.d/$app.conf
-sudo sed -i "s@__FINALPATH__@$final_path@g" /etc/nginx/conf.d/$domain.d/$app.conf
-sudo sed -i "s@__NAMETOCHANGE__@$app@g" /etc/nginx/conf.d/$domain.d/$app.conf
+ynh_nginx_config
 
 #=================================================
 # CREATE DEDICATED USER
@@ -83,7 +77,7 @@ ynh_system_user_create $app	# Créer un utilisateur système dédié à l'app
 # PHP-FPM CONFIGURATION
 #=================================================
 
-POOL_FPM	# Créer le fichier de configuration du pool php-fpm et le configure.
+ynh_fpm_config	# Créer le fichier de configuration du pool php-fpm et le configure.
 
 #=================================================
 # SPECIFIC SETUP
@@ -102,7 +96,7 @@ sudo yunohost app ssowatconf
 sudo systemctl reload nginx
 
 # Leed installation via curl
-YNH_CURL "install_changeLngLeed=$language&root=$domain$path_url&mysqlHost=localhost&mysqlLogin=$db_name&mysqlMdp=$db_pwd&mysqlBase=$db_name&mysqlPrefix=leed_&login=$admin&password=$user_pwd" "/install.php?installButton"
+ynh_local_curl "/install.php?installButton" "install_changeLngLeed=$language" "root=$domain$path_url" "mysqlHost=localhost" "mysqlLogin=$db_name" "mysqlMdp=$db_pwd" "mysqlBase=$db_name" "mysqlPrefix=leed_" "login=$admin" "password=$user_pwd"
 
 #=================================================
 # RETRIEVE SYNCHRONISATION CODE
@@ -114,10 +108,10 @@ code_sync=$(mysql -h localhost -u $db_name -p$db_pwd -s $db_name -e 'SELECT valu
 # SETUP CRON FILE FOR SYNCHRONISATION
 #=================================================
 
-sed -i "s@__ADMIN__@$admin@g" ../conf/cron_leed
-sed -i "s@__DOMAIN__@$domain@g" ../conf/cron_leed
-sed -i "s@__PATH__@$path_url@g" ../conf/cron_leed
-sed -i "s@__CODESYNC__@$code_sync@g" ../conf/cron_leed
+ynh_replace_string "__ADMIN__" "$admin" ../conf/cron_leed
+ynh_replace_string "__DOMAIN__" "$domain" ../conf/cron_leed
+ynh_replace_string "__PATH__" "$path_url" ../conf/cron_leed
+ynh_replace_string "__CODESYNC__" "$code_sync" ../conf/cron_leed
 sudo cp ../conf/cron_leed /etc/cron.d/$app
 
 #=================================================
