@@ -59,11 +59,14 @@ fi
 # BACKUP BEFORE UPGRADE THEN ACTIVE TRAP
 #=================================================
 
-BACKUP_BEFORE_UPGRADE	# Backup the current version of the app
+# Backup the current version of the app
+ynh_backup_before_upgrade
 ynh_clean_setup () {
-	BACKUP_FAIL_UPGRADE	# restore it if the upgrade fails
+	# restore it if the upgrade fails
+	ynh_restore_upgradebackup
 }
-ynh_abort_if_errors	# Active trap pour arrêter le script si une erreur est détectée.
+# Exit if an error occurs during the execution of the script
+ynh_abort_if_errors
 
 #=================================================
 # CHECK THE PATH
@@ -83,7 +86,7 @@ ynh_setup_source "$final_path"	# Télécharge la source, décompresse et copie d
 # NGINX CONFIGURATION
 #=================================================
 
-ynh_nginx_config
+ynh_add_nginx_config
 
 #=================================================
 # CREATE DEDICATED USER
@@ -95,7 +98,7 @@ ynh_system_user_create $app	# Create the dedicated user, if not exist
 # PHP-FPM CONFIGURATION
 #=================================================
 
-ynh_fpm_config	# Créer le fichier de configuration du pool php-fpm et le configure.
+ynh_add_fpm_config	# Créer le fichier de configuration du pool php-fpm et le configure.
 
 #=================================================
 # SPECIFIC UPGRADE
@@ -113,17 +116,17 @@ ynh_replace_string "__ADMIN__" "$admin" ../conf/cron_leed
 ynh_replace_string "__DOMAIN__" "$domain" ../conf/cron_leed
 ynh_replace_string "__PATH__" "$path_url" ../conf/cron_leed
 ynh_replace_string "__CODESYNC__" "$code_sync" ../conf/cron_leed
-sudo cp ../conf/cron_leed /etc/cron.d/$app
+cp ../conf/cron_leed /etc/cron.d/$app
 
 #=================================================
 # SECURING FILES AND DIRECTORIES
 #=================================================
 
 # Les fichiers appartiennent à root
-sudo chown -R root: $final_path
+chown -R root: $final_path
 # www-data doit avoir les droits d'écriture dans plugins, cache et updates
-sudo mkdir -p $final_path/cache
-sudo chown -R $app $final_path/cache $final_path/plugins $final_path/updates
+mkdir -p $final_path/cache
+chown -R $app $final_path/cache $final_path/plugins $final_path/updates
 
 #=================================================
 # UPGRADE WITH CURL
@@ -134,7 +137,7 @@ ynh_secure_remove $final_path/cache/*
 # Laisse un accès libre pour curl.
 ynh_app_setting_set $app unprotected_uris "/"
 # Régénère la configuration de SSOwat
-sudo yunohost app ssowatconf
+yunohost app ssowatconf
 # Lance la procédure de mise à jour de leed.
 # curl -kL -H "Host: $domain" --resolve $domain:443:127.0.0.1 "https://localhost$path_url"
 ynh_local_curl "/"
@@ -158,4 +161,4 @@ fi
 # RELOAD NGINX
 #=================================================
 
-sudo systemctl reload nginx
+systemctl reload nginx
