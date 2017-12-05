@@ -1,5 +1,5 @@
-SOURCE_URL=https://github.com/LeedRSS/Leed/archive/v1.8.2.tar.gz
-SOURCE_SUM=e0558125f8c76d399beb0cfc6d168b04
+SOURCE_URL=https://github.com/LeedRSS/Leed/archive/v1.8.3.tar.gz
+SOURCE_SUM=4fb46124695dfc8e6a3bfa5e48850547
 SOURCE_SUM_PRG=md5sum
 SOURCE_FORMAT=tar.gz
 SOURCE_IN_SUBDIR=true
