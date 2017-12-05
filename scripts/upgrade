@@ -139,7 +139,6 @@ ynh_app_setting_set $app unprotected_uris "/"
 # Régénère la configuration de SSOwat
 yunohost app ssowatconf
 # Lance la procédure de mise à jour de leed.
-# curl -kL -H "Host: $domain" --resolve $domain:443:127.0.0.1 "https://localhost$path_url"
 ynh_local_curl "/"
 
 #=================================================
