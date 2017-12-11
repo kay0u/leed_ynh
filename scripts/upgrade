@@ -144,6 +144,12 @@ ynh_local_curl "/"
 #=================================================
 # GENERIC FINALISATION
 #=================================================
+# UPGRADE FAIL2BAN
+#=================================================
+
+ynh_add_fail2ban_config "/var/log/nginx/${domain}-error.log" "PHP message: Leed: wrong login for .* client: <HOST>" 5
+
+#=================================================
 # SETUP SSOWAT
 #=================================================
 

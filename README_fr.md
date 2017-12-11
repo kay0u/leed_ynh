@@ -27,6 +27,8 @@ Utiliser le panneau d'administration de votre Jenkins pour configurer cette appl
 
 ## Fonctionnalités spécifiques à YunoHost
 
+* Login sécurisé par fail2ban
+
 #### Support multi-utilisateurs
 
 Non supportée.
