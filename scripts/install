@@ -158,3 +158,13 @@ fi
 #=================================================
 
 systemctl reload nginx
+
+#=================================================
+# SEND A README FOR THE ADMIN
+#=================================================
+
+message="Please take note of your password for this application: '$user_pwd'.
+
+If you facing an issue or want to improve this app, please open a new issue in this project: https://github.com/YunoHost-Apps/leed_ynh"
+
+ynh_send_readme_to_admin "$message" "$admin"

@@ -36,7 +36,7 @@ db_name=$(ynh_app_setting_get $app db_name)
 # CHECK IF THE APP CAN BE RESTORED
 #=================================================
 
-yunohost app checkurl "${domain}${path_url}" -a "$app" \
+ynh_webpath_available $domain $path_url \
 	|| ynh_die "Path not available: ${domain}${path_url}"
 test ! -d $final_path \
 	|| ynh_die "There is already a directory: $final_path "
@@ -106,3 +106,11 @@ chown -R $app $final_path/cache $final_path/plugins $final_path/updates
 
 systemctl reload php5-fpm
 systemctl reload nginx
+
+#=================================================
+# SEND A README FOR THE ADMIN
+#=================================================
+
+message="If you facing an issue or want to improve this app, please open a new issue in this project: https://github.com/YunoHost-Apps/leed_ynh"
+
+ynh_send_readme_to_admin "$message" "$admin"
