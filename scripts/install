@@ -22,7 +22,7 @@ ynh_abort_if_errors	# Active trap pour arrêter le script si une erreur est dét
 domain=$YNH_APP_ARG_DOMAIN
 path_url=$YNH_APP_ARG_PATH
 admin=$YNH_APP_ARG_ADMIN
-user_pwd=$YNH_APP_ARG_PASSWORD
+ynh_print_OFF; user_pwd=$YNH_APP_ARG_PASSWORD; ynh_print_ON
 language=$YNH_APP_ARG_LANGUAGE
 is_public=$YNH_APP_ARG_IS_PUBLIC
 
@@ -103,7 +103,9 @@ yunohost app ssowatconf
 systemctl reload nginx
 
 # Leed installation via curl
+ynh_print_OFF
 ynh_local_curl "/install.php?installButton" "install_changeLngLeed=$language" "root=$domain$path_url" "mysqlHost=localhost" "mysqlLogin=$db_name" "mysqlMdp=$db_pwd" "mysqlBase=$db_name" "mysqlPrefix=leed_" "login=$admin" "password=$user_pwd"
+ynh_print_ON
 
 #=================================================
 # RETRIEVE SYNCHRONISATION CODE
@@ -163,8 +165,10 @@ systemctl reload nginx
 # SEND A README FOR THE ADMIN
 #=================================================
 
+ynh_print_OFF
 message="Please take note of your password for this application: '$user_pwd'.
 
 If you facing an issue or want to improve this app, please open a new issue in this project: https://github.com/YunoHost-Apps/leed_ynh"
 
 ynh_send_readme_to_admin "$message" "$admin"
+ynh_print_ON
