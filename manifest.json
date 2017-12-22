@@ -2,19 +2,19 @@
 	"name": "Leed",
 	"id": "leed",
 	"packaging_format": 1,
-	"requirements": {
-		"yunohost": ">= 2.4"
-	},
 	"description": {
 		"en": "Leed is a minimalistic RSS feed aggregator which allows quick and non-intrusive reading of feeds.",
 		"fr": "Leed est un agrégateur RSS minimaliste qui permet la consultation de flux RSS de manière rapide et non intrusive."
 	},
-	"version": "1.8.2",
+	"version": "1.8.3~ynh1",
 	"url": "http://leed.idleman.fr/",
 	"license": "AGPL-3.0",
 	"maintainer": {
 		"name": "Maniack Crudelis",
 		"email": "maniackc_dev@crudelis.fr"
+	},
+	"requirements": {
+        "yunohost": ">= 2.7.2"
 	},
 	"multi_instance": true,
 	"services": [

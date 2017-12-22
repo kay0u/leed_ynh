@@ -45,6 +45,12 @@ ynh_remove_nginx_config	# Suppression de la configuration nginx
 ynh_remove_fpm_config	# Suppression de la configuration du pool php-fpm
 
 #=================================================
+# REMOVE FAIL2BAN CONFIGURATION
+#=================================================
+
+ynh_remove_fail2ban_config
+
+#=================================================
 # SPECIFIC REMOVE
 #=================================================
 # REMOVE THE CRON FILE

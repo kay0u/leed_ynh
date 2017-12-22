@@ -22,7 +22,7 @@ ynh_abort_if_errors	# Active trap pour arrêter le script si une erreur est dét
 domain=$YNH_APP_ARG_DOMAIN
 path_url=$YNH_APP_ARG_PATH
 admin=$YNH_APP_ARG_ADMIN
-user_pwd=$YNH_APP_ARG_PASSWORD
+ynh_print_OFF; user_pwd=$YNH_APP_ARG_PASSWORD; ynh_print_ON
 language=$YNH_APP_ARG_LANGUAGE
 is_public=$YNH_APP_ARG_IS_PUBLIC
 
@@ -32,9 +32,16 @@ app=$YNH_APP_INSTANCE_NAME
 # CHECK IF THE APP CAN BE INSTALLED WITH THIS ARGS
 #=================================================
 
-path_url=$(ynh_normalize_url_path $path_url)	# Vérifie et corrige la syntaxe du path.
-CHECK_DOMAINPATH	# Vérifie la disponibilité du path et du domaine.
-CHECK_FINALPATH	# Vérifie que le dossier de destination n'est pas déjà utilisé.
+final_path=/var/www/$app
+test ! -e "$final_path" || ynh_die "This path already contains a folder"
+
+# Normalize the url path syntax
+path_url=$(ynh_normalize_url_path $path_url)
+
+# Check web path availability
+ynh_webpath_available $domain $path_url
+# Register (book) web path
+ynh_webpath_register $app $domain $path_url
 
 #=================================================
 # STORE SETTINGS FROM MANIFEST
@@ -65,7 +72,7 @@ ynh_setup_source "$final_path"	# Télécharge la source, décompresse et copie d
 # NGINX CONFIGURATION
 #=================================================
 
-ynh_nginx_config
+ynh_add_nginx_config
 
 #=================================================
 # CREATE DEDICATED USER
@@ -77,7 +84,7 @@ ynh_system_user_create $app	# Créer un utilisateur système dédié à l'app
 # PHP-FPM CONFIGURATION
 #=================================================
 
-ynh_fpm_config	# Créer le fichier de configuration du pool php-fpm et le configure.
+ynh_add_fpm_config	# Créer le fichier de configuration du pool php-fpm et le configure.
 
 #=================================================
 # SPECIFIC SETUP
@@ -86,17 +93,19 @@ ynh_fpm_config	# Créer le fichier de configuration du pool php-fpm et le config
 #=================================================
 
 # Set right permissions for curl install
-sudo chown -R $app: $final_path
+chown -R $app: $final_path
 
 # Rend la page d'install publique pour curl
 ynh_app_setting_set $app unprotected_uris "/"	#L'usage de unprotected_uris a la place de skipped_uris permet de passer le header d'auth http
-sudo yunohost app ssowatconf
+yunohost app ssowatconf
 
 # Reload Nginx
-sudo systemctl reload nginx
+systemctl reload nginx
 
 # Leed installation via curl
+ynh_print_OFF
 ynh_local_curl "/install.php?installButton" "install_changeLngLeed=$language" "root=$domain$path_url" "mysqlHost=localhost" "mysqlLogin=$db_name" "mysqlMdp=$db_pwd" "mysqlBase=$db_name" "mysqlPrefix=leed_" "login=$admin" "password=$user_pwd"
+ynh_print_ON
 
 #=================================================
 # RETRIEVE SYNCHRONISATION CODE
@@ -112,7 +121,7 @@ ynh_replace_string "__ADMIN__" "$admin" ../conf/cron_leed
 ynh_replace_string "__DOMAIN__" "$domain" ../conf/cron_leed
 ynh_replace_string "__PATH__" "$path_url" ../conf/cron_leed
 ynh_replace_string "__CODESYNC__" "$code_sync" ../conf/cron_leed
-sudo cp ../conf/cron_leed /etc/cron.d/$app
+cp ../conf/cron_leed /etc/cron.d/$app
 
 #=================================================
 # GENERIC FINALISATION
@@ -121,10 +130,16 @@ sudo cp ../conf/cron_leed /etc/cron.d/$app
 #=================================================
 
 # Les fichiers appartiennent à root
-sudo chown -R root: $final_path
+chown -R root: $final_path
 # $app doit avoir les droits d'écriture dans plugins, cache et updates
-sudo mkdir $final_path/cache
-sudo chown -R $app $final_path/cache $final_path/plugins $final_path/updates
+mkdir $final_path/cache
+chown -R $app $final_path/cache $final_path/plugins $final_path/updates
+
+#=================================================
+# SETUP FAIL2BAN
+#=================================================
+
+ynh_add_fail2ban_config "/var/log/nginx/${domain}-error.log" "PHP message: Leed: wrong login for .* client: <HOST>" 5
 
 #=================================================
 # SETUP SSOWAT
@@ -144,4 +159,16 @@ fi
 # RELOAD NGINX
 #=================================================
 
-sudo systemctl reload nginx
+systemctl reload nginx
+
+#=================================================
+# SEND A README FOR THE ADMIN
+#=================================================
+
+ynh_print_OFF
+message="Please take note of your password for this application: '$user_pwd'.
+
+If you facing an issue or want to improve this app, please open a new issue in this project: https://github.com/YunoHost-Apps/leed_ynh"
+
+ynh_send_readme_to_admin "$message" "$admin"
+ynh_print_ON
