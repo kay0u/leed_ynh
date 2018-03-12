@@ -126,4 +126,4 @@ ynh_mysql_execute_as_root "UPDATE leed_configuration SET value='$domain_path/' W
 # RELOAD NGINX
 #=================================================
 
-systemctl reload nginx
+ynh_system_reload nginx

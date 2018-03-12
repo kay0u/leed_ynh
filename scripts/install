@@ -104,7 +104,7 @@ ynh_app_setting_set $app unprotected_uris "/"	#L'usage de unprotected_uris a la 
 yunohost app ssowatconf
 
 # Reload Nginx
-systemctl reload nginx
+ynh_system_reload nginx
 
 # Leed installation via curl
 ynh_print_OFF
@@ -163,7 +163,7 @@ fi
 # RELOAD NGINX
 #=================================================
 
-systemctl reload nginx
+ynh_system_reload nginx
 
 #=================================================
 # SEND A README FOR THE ADMIN
