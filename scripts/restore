@@ -83,7 +83,7 @@ ynh_restore_file "/etc/php5/fpm/conf.d/20-$app.ini"
 
 ynh_restore_file "/etc/fail2ban/jail.d/$app.conf"
 ynh_restore_file "/etc/fail2ban/filter.d/$app.conf"
-systemctl restart fail2ban
+ynh_system_reload fail2ban restart
 
 #=================================================
 # SPECIFIC RESTORE
@@ -105,8 +105,8 @@ chown -R $app $final_path/cache $final_path/plugins $final_path/updates
 # RELOAD NGINX AND PHP-FPM
 #=================================================
 
-systemctl reload php5-fpm
-systemctl reload nginx
+ynh_system_reload php5-fpm
+ynh_system_reload nginx
 
 #=================================================
 # SEND A README FOR THE ADMIN
