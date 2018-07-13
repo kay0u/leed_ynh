@@ -72,10 +72,6 @@ ynh_setup_source "$final_path"	# Télécharge la source, décompresse et copie d
 # NGINX CONFIGURATION
 #=================================================
 
-if [ "$path_url" != "/" ]
-then
-	ynh_replace_string "^#sub_path_only" "" "../conf/nginx.conf"
-fi
 ynh_add_nginx_config
 
 #=================================================
@@ -104,7 +100,7 @@ ynh_app_setting_set $app unprotected_uris "/"	#L'usage de unprotected_uris a la 
 yunohost app ssowatconf
 
 # Reload Nginx
-ynh_system_reload nginx
+ynh_system_reload --service_name=nginx
 
 # Leed installation via curl
 ynh_print_OFF
@@ -163,7 +159,7 @@ fi
 # RELOAD NGINX
 #=================================================
 
-ynh_system_reload nginx
+ynh_system_reload --service_name=nginx
 
 #=================================================
 # SEND A README FOR THE ADMIN
@@ -174,5 +170,5 @@ message="Please take note of your password for this application: '$user_pwd'.
 
 If you facing an issue or want to improve this app, please open a new issue in this project: https://github.com/YunoHost-Apps/leed_ynh"
 
-ynh_send_readme_to_admin "$message" "$admin"
+ynh_send_readme_to_admin --app_message="$message" --recipients="$admin"
 ynh_print_ON
