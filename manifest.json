@@ -6,7 +6,7 @@
 		"en": "Leed is a minimalistic RSS feed aggregator which allows quick and non-intrusive reading of feeds.",
 		"fr": "Leed est un agrégateur RSS minimaliste qui permet la consultation de flux RSS de manière rapide et non intrusive."
 	},
-	"version": "1.8.3~ynh3",
+	"version": "1.8.3~ynh4",
 	"url": "http://leed.idleman.fr/",
 	"license": "AGPL-3.0",
 	"maintainer": {
@@ -14,7 +14,7 @@
 		"email": "maniackc_dev@crudelis.fr"
 	},
 	"requirements": {
-        "yunohost": ">= 2.7.2"
+        "yunohost": ">= 2.7.14"
 	},
 	"multi_instance": true,
 	"services": [

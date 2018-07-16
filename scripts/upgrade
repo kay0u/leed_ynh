@@ -27,7 +27,8 @@ db_name=$(ynh_app_setting_get $app db_name)
 # CHECK VERSION
 #=================================================
 
-ynh_abort_if_up_to_date
+# ynh_abort_if_up_to_date
+upgrade_type=$(ynh_check_app_version_changed)
 
 #=================================================
 # FIX OLD THINGS
@@ -81,21 +82,26 @@ ynh_abort_if_errors
 path_url=$(ynh_normalize_url_path $path_url)	# Vérifie et corrige la syntaxe du path.
 
 #=================================================
+# ACTIVATE MAINTENANCE MODE
+#=================================================
+
+ynh_maintenance_mode_ON
+
+#=================================================
 # STANDARD UPGRADE STEPS
 #=================================================
 # DOWNLOAD, CHECK AND UNPACK SOURCE
 #=================================================
 
-ynh_setup_source "$final_path"	# Télécharge la source, décompresse et copie dans $final_path
+if [ "$upgrade_type" == "UPGRADE_APP" ]
+then
+	ynh_setup_source "$final_path"	# Télécharge la source, décompresse et copie dans $final_path
+fi
 
 #=================================================
 # NGINX CONFIGURATION
 #=================================================
 
-if [ "$path_url" != "/" ]
-then
-	ynh_replace_string "^#sub_path_only" "" "../conf/nginx.conf"
-fi
 ynh_add_nginx_config
 
 #=================================================
@@ -142,14 +148,17 @@ chown -R $app $final_path/cache $final_path/plugins $final_path/updates
 # UPGRADE WITH CURL
 #=================================================
 
-# Vide le cache de leed pour la mise à jour
-ynh_secure_remove $final_path/cache/*
-# Laisse un accès libre pour curl.
-ynh_app_setting_set $app unprotected_uris "/"
-# Régénère la configuration de SSOwat
-yunohost app ssowatconf
-# Lance la procédure de mise à jour de leed.
-ynh_local_curl "/"
+if [ "$upgrade_type" == "UPGRADE_APP" ]
+then
+	# Vide le cache de leed pour la mise à jour
+	ynh_secure_remove $final_path/cache/*
+	# Laisse un accès libre pour curl.
+	ynh_app_setting_set $app unprotected_uris "/"
+	# Régénère la configuration de SSOwat
+	yunohost app ssowatconf
+	# Lance la procédure de mise à jour de leed.
+	ynh_local_curl "/"
+fi
 
 #=================================================
 # GENERIC FINALISATION
@@ -176,4 +185,10 @@ fi
 # RELOAD NGINX
 #=================================================
 
-ynh_system_reload nginx
+ynh_system_reload --service_name=nginx
+
+#=================================================
+# DEACTIVE MAINTENANCE MODE
+#=================================================
+
+ynh_maintenance_mode_OFF
