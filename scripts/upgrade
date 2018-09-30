@@ -22,6 +22,8 @@ is_public=$(ynh_app_setting_get $app is_public)
 final_path=$(ynh_app_setting_get $app final_path)
 db_pwd=$(ynh_app_setting_get $app mysqlpwd)
 db_name=$(ynh_app_setting_get $app db_name)
+overwrite_nginx=$(ynh_app_setting_get $app overwrite_nginx)
+overwrite_phpfpm=$(ynh_app_setting_get $app overwrite_phpfpm)
 
 #=================================================
 # CHECK VERSION
@@ -34,12 +36,12 @@ upgrade_type=$(ynh_check_app_version_changed)
 # FIX OLD THINGS
 #=================================================
 
-if [ -z $final_path ]; then	# Si final_path n'est pas renseigné dans app setting
+if [ -z "$final_path" ]; then	# Si final_path n'est pas renseigné dans app setting
 	final_path=/var/www/$app
 	ynh_app_setting_set $app final_path $final_path
 fi
 
-if [ -z $db_name ]; then	# Si db_name n'est pas renseigné dans app setting
+if [ -z "$db_name" ]; then	# Si db_name n'est pas renseigné dans app setting
 	db_name=$(ynh_make_valid_dbid $app)
 	ynh_app_setting_set $app db_name $db_name
 fi
@@ -60,6 +62,18 @@ else
 		ynh_app_setting_set $app is_public 0
 		is_public=0
 	fi
+fi
+
+# If overwrite_nginx doesn't exist, create it
+if [ -z "$overwrite_nginx" ]; then
+	overwrite_nginx=1
+	ynh_app_setting_set $app overwrite_nginx $overwrite_nginx
+fi
+
+# If overwrite_phpfpm doesn't exist, create it
+if [ -z "$overwrite_phpfpm" ]; then
+	overwrite_phpfpm=1
+	ynh_app_setting_set $app overwrite_phpfpm $overwrite_phpfpm
 fi
 
 #=================================================
@@ -102,7 +116,11 @@ fi
 # NGINX CONFIGURATION
 #=================================================
 
-ynh_add_nginx_config
+# Overwrite the nginx configuration only if it's allowed
+if [ $overwrite_nginx -eq 1 ]
+then
+	ynh_add_nginx_config
+fi
 
 #=================================================
 # CREATE DEDICATED USER
@@ -114,7 +132,11 @@ ynh_system_user_create $app	# Create the dedicated user, if not exist
 # PHP-FPM CONFIGURATION
 #=================================================
 
-ynh_add_fpm_config	# Créer le fichier de configuration du pool php-fpm et le configure.
+# Overwrite the php-fpm configuration only if it's allowed
+if [ $overwrite_phpfpm -eq 1 ]
+then
+	ynh_add_fpm_config	# Créer le fichier de configuration du pool php-fpm et le configure.
+fi
 
 #=================================================
 # SPECIFIC UPGRADE
