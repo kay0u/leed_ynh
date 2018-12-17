@@ -15,7 +15,7 @@
 		setup_private=1
 		setup_public=1
 		upgrade=1
-		upgrade=1	from_commit=9e9bc2309ae0460adba186b7f8ace4dbf44de087
+		upgrade=1	from_commit=c4b966ff2a977b8c0923d4f8ad403d86454883cb
 		backup_restore=1
 		multi_instance=1
 		incorrect_path=1
@@ -37,6 +37,6 @@
 Email=
 Notification=down
 ;;; Upgrade options
-	; commit=9e9bc2309ae0460adba186b7f8ace4dbf44de087
-		name=01 Mar 2017 9e9bc2309ae0460adba186b7f8ace4dbf44de087	
+	; commit=c4b966ff2a977b8c0923d4f8ad403d86454883cb
+		name=Fix fail2ban helper
 		manifest_arg=domain=DOMAIN&path=PATH&admin=USER&password=pass&language=fr&market=1&is_public=1&
