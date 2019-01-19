@@ -15,7 +15,7 @@
 		setup_private=1
 		setup_public=1
 		upgrade=1
-		upgrade=1	from_commit=9e9bc2309ae0460adba186b7f8ace4dbf44de087
+		upgrade=1	from_commit=8b622d430db9ab860aee156a32086507669243fd
 		backup_restore=1
 		multi_instance=1
 		incorrect_path=1
@@ -37,6 +37,6 @@
 Email=
 Notification=down
 ;;; Upgrade options
-	; commit=9e9bc2309ae0460adba186b7f8ace4dbf44de087
-		name=01 Mar 2017 9e9bc2309ae0460adba186b7f8ace4dbf44de087	
+	; commit=8b622d430db9ab860aee156a32086507669243fd
+		name=MAJ 1.8.2
 		manifest_arg=domain=DOMAIN&path=PATH&admin=USER&password=pass&language=fr&market=1&is_public=1&
