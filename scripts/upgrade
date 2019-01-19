@@ -29,34 +29,38 @@ overwrite_phpfpm=$(ynh_app_setting_get $app overwrite_phpfpm)
 # CHECK VERSION
 #=================================================
 
-# ynh_abort_if_up_to_date
 upgrade_type=$(ynh_check_app_version_changed)
 
 #=================================================
-# FIX OLD THINGS
+# ENSURE DOWNWARD COMPATIBILITY
 #=================================================
 
-if [ -z "$final_path" ]; then	# Si final_path n'est pas renseigné dans app setting
+# If final_path doesn't exist, create it
+if [ -z "$final_path" ]; then
 	final_path=/var/www/$app
 	ynh_app_setting_set $app final_path $final_path
 fi
 
-if [ -z "$db_name" ]; then	# Si db_name n'est pas renseigné dans app setting
+# If db_name doesn't exist, create it
+if [ -z "$db_name" ]; then
 	db_name=$(ynh_make_valid_dbid $app)
 	ynh_app_setting_set $app db_name $db_name
 fi
 
-if [ -z "$is_public" ]; then	# Raté avec get au lieu de set...
+# If is_public doesn't exist, create it
+if [ -z "$is_public" ]; then
 	public_check=$(ynh_app_setting_get $app skipped_uris)
-	if [ -z "$public_check" ]; then	# Si skipped_uris est vide, c'était une install publique.
+	# If skipped_uris is empty, that was a public installation.
+	if [ -z "$public_check" ]; then
 		is_public=1
 	else
 		is_public=0
 	fi
 	ynh_app_setting_set $app is_public $is_public
 else
+	# Fix is_public as a boolean
 	if [ "$is_public" = "Yes" ]; then
-		ynh_app_setting_set $app is_public 1	# Fixe is_public en booléen
+		ynh_app_setting_set $app is_public 1
 		is_public=1
 	elif [ "$is_public" = "No" ]; then
 		ynh_app_setting_set $app is_public 0
@@ -93,7 +97,8 @@ ynh_abort_if_errors
 # CHECK THE PATH
 #=================================================
 
-path_url=$(ynh_normalize_url_path $path_url)	# Vérifie et corrige la syntaxe du path.
+# Normalize the URL path syntax
+path_url=$(ynh_normalize_url_path $path_url)
 
 #=================================================
 # ACTIVATE MAINTENANCE MODE
@@ -109,7 +114,8 @@ ynh_maintenance_mode_ON
 
 if [ "$upgrade_type" == "UPGRADE_APP" ]
 then
-	ynh_setup_source "$final_path"	# Télécharge la source, décompresse et copie dans $final_path
+	# Download, check integrity, uncompress and patch the source from app.src
+	ynh_setup_source "$final_path"
 fi
 
 #=================================================
@@ -119,6 +125,7 @@ fi
 # Overwrite the nginx configuration only if it's allowed
 if [ $overwrite_nginx -eq 1 ]
 then
+	# Create a dedicated nginx config
 	ynh_add_nginx_config
 fi
 
@@ -126,7 +133,8 @@ fi
 # CREATE DEDICATED USER
 #=================================================
 
-ynh_system_user_create $app	# Create the dedicated user, if not exist
+# Create a dedicated user (if not existing)
+ynh_system_user_create $app
 
 #=================================================
 # PHP-FPM CONFIGURATION
@@ -135,7 +143,8 @@ ynh_system_user_create $app	# Create the dedicated user, if not exist
 # Overwrite the php-fpm configuration only if it's allowed
 if [ $overwrite_phpfpm -eq 1 ]
 then
-	ynh_add_fpm_config	# Créer le fichier de configuration du pool php-fpm et le configure.
+	# Create a dedicated php-fpm config
+	ynh_add_fpm_config
 fi
 
 #=================================================
@@ -160,9 +169,9 @@ cp ../conf/cron_leed /etc/cron.d/$app
 # SECURING FILES AND DIRECTORIES
 #=================================================
 
-# Les fichiers appartiennent à root
+# Set permissions on app files
 chown -R root: $final_path
-# www-data doit avoir les droits d'écriture dans plugins, cache et updates
+# $app need write permissions in plugins, cache and updates
 mkdir -p $final_path/cache
 chown -R $app $final_path/cache $final_path/plugins $final_path/updates
 
@@ -172,13 +181,13 @@ chown -R $app $final_path/cache $final_path/plugins $final_path/updates
 
 if [ "$upgrade_type" == "UPGRADE_APP" ]
 then
-	# Vide le cache de leed pour la mise à jour
+	# Clear leed cache
 	ynh_secure_remove $final_path/cache/*
-	# Laisse un accès libre pour curl.
+	# Set the app as temporarily public for curl call
 	ynh_app_setting_set $app unprotected_uris "/"
-	# Régénère la configuration de SSOwat
+	# Regen SSOwat configuration
 	yunohost app ssowatconf
-	# Lance la procédure de mise à jour de leed.
+	# Start the upgrade procedure of leed.
 	ynh_local_curl "/"
 fi
 
@@ -188,6 +197,7 @@ fi
 # UPGRADE FAIL2BAN
 #=================================================
 
+# Create a dedicated fail2ban config
 ynh_add_fail2ban_config --logpath="/var/log/nginx/${domain}-error.log" --failregex="PHP message: Leed: wrong login for .* client: <HOST>" --max_retry=5
 
 #=================================================
@@ -197,9 +207,9 @@ ynh_add_fail2ban_config --logpath="/var/log/nginx/${domain}-error.log" --failreg
 # Make app private if necessary
 if [ $is_public -eq 0 ];
 then
-	# Retire l'autorisation d'accès à leed
+	# Remove the public access
 	ynh_app_setting_delete $app unprotected_uris
-	# Rend la page d'actualisation accessible pour le script cron.
+	# Set the action.php script public for the cron task
 	ynh_app_setting_set $app skipped_uris "/action.php"
 fi
 

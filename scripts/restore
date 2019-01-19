@@ -46,19 +46,19 @@ ynh_maintenance_mode_ON
 #=================================================
 # STANDARD RESTORE STEPS
 #=================================================
-# RESTORE OF THE NGINX CONFIGURATION
+# RESTORE THE NGINX CONFIGURATION
 #=================================================
 
 ynh_restore_file "/etc/nginx/conf.d/$domain.d/$app.conf"
 
 #=================================================
-# RESTORE OF THE MAIN DIR OF THE APP
+# RESTORE THE APP MAIN DIR
 #=================================================
 
 ynh_restore_file "$final_path"
 
 #=================================================
-# RESTORE OF THE SQL BDD
+# RESTORE THE MYSQL DATABASE
 #=================================================
 
 db_pwd=$(ynh_app_setting_get $app mysqlpwd)
@@ -69,10 +69,11 @@ ynh_mysql_connect_as $db_name $db_pwd $db_name < ./db.sql
 # RECREATE THE DEDICATED USER
 #=================================================
 
-ynh_system_user_create $app	# Recreate the dedicated user, if not exist
+# Create the dedicated user (if not existing)
+ynh_system_user_create $app
 
 #=================================================
-# RESTORE OF THE PHP-FPM CONFIGURATION
+# RESTORE THE PHP-FPM CONFIGURATION
 #=================================================
 
 ynh_restore_file "/etc/php5/fpm/pool.d/$app.conf"
@@ -88,7 +89,7 @@ ynh_systemd_action --action=restart --service_name=fail2ban
 #=================================================
 # SPECIFIC RESTORE
 #=================================================
-# RESTORE OF THE CRON FILE
+# RESTORE THE CRON FILE
 #=================================================
 
 ynh_restore_file "/etc/cron.d/$app"
@@ -118,6 +119,6 @@ ynh_maintenance_mode_OFF
 # SEND A README FOR THE ADMIN
 #=================================================
 
-message="If you facing an issue or want to improve this app, please open a new issue in this project: https://github.com/YunoHost-Apps/leed_ynh"
+message="If you're facing an issue or want to improve this app, please open a new issue in this project: https://github.com/YunoHost-Apps/leed_ynh"
 
 ynh_send_readme_to_admin --app_message="$message" --recipients="$admin"
