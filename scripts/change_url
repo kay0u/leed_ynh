@@ -130,7 +130,7 @@ ynh_mysql_execute_as_root "UPDATE leed_configuration SET value='$domain_path/' W
 # RELOAD NGINX
 #=================================================
 
-ynh_system_reload --service_name=nginx
+ynh_systemd_action --action=reload --service_name=nginx
 
 #=================================================
 # DEACTIVE MAINTENANCE MODE
