@@ -119,7 +119,7 @@ ynh_systemd_action --action=reload --service_name=nginx
 #=================================================
 # DEACTIVE MAINTENANCE MODE
 #=================================================
-ynh_script_progression --message="Deactive maintenance mode" --weight=2
+ynh_script_progression --message="Disable maintenance mode" --weight=2
 
 ynh_maintenance_mode_OFF
 
