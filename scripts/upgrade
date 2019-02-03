@@ -12,6 +12,7 @@ source /usr/share/yunohost/helpers
 #=================================================
 # LOAD SETTINGS
 #=================================================
+ynh_script_progression --message="Load settings" --weight=3
 
 app=$YNH_APP_INSTANCE_NAME
 
@@ -24,6 +25,7 @@ db_pwd=$(ynh_app_setting_get $app mysqlpwd)
 db_name=$(ynh_app_setting_get $app db_name)
 overwrite_nginx=$(ynh_app_setting_get $app overwrite_nginx)
 overwrite_phpfpm=$(ynh_app_setting_get $app overwrite_phpfpm)
+admin_mail_html=$(ynh_app_setting_get $app admin_mail_html)
 
 #=================================================
 # CHECK VERSION
@@ -34,6 +36,7 @@ upgrade_type=$(ynh_check_app_version_changed)
 #=================================================
 # ENSURE DOWNWARD COMPATIBILITY
 #=================================================
+ynh_script_progression --message="Ensure downward compatibility"
 
 # If final_path doesn't exist, create it
 if [ -z "$final_path" ]; then
@@ -80,9 +83,16 @@ if [ -z "$overwrite_phpfpm" ]; then
 	ynh_app_setting_set $app overwrite_phpfpm $overwrite_phpfpm
 fi
 
+# If admin_mail_html doesn't exist, create it
+if [ -z "$admin_mail_html" ]; then
+	admin_mail_html=1
+	ynh_app_setting_set $app admin_mail_html $admin_mail_html
+fi
+
 #=================================================
 # BACKUP BEFORE UPGRADE THEN ACTIVE TRAP
 #=================================================
+ynh_script_progression --message="Backup the app before upgrading" --weight=4
 
 # Backup the current version of the app
 ynh_backup_before_upgrade
@@ -103,6 +113,7 @@ path_url=$(ynh_normalize_url_path $path_url)
 #=================================================
 # ACTIVATE MAINTENANCE MODE
 #=================================================
+ynh_script_progression --message="Activate maintenance mode"
 
 ynh_maintenance_mode_ON
 
@@ -114,6 +125,7 @@ ynh_maintenance_mode_ON
 
 if [ "$upgrade_type" == "UPGRADE_APP" ]
 then
+	ynh_script_progression --message="Download, check and unpack source" --weight=3
 	# Download, check integrity, uncompress and patch the source from app.src
 	ynh_setup_source "$final_path"
 fi
@@ -125,6 +137,7 @@ fi
 # Overwrite the nginx configuration only if it's allowed
 if [ $overwrite_nginx -eq 1 ]
 then
+	ynh_script_progression --message="Reconfigure nginx" --weight=2
 	# Create a dedicated nginx config
 	ynh_add_nginx_config
 fi
@@ -132,6 +145,7 @@ fi
 #=================================================
 # CREATE DEDICATED USER
 #=================================================
+ynh_script_progression --message="Create a dedicated user"
 
 # Create a dedicated user (if not existing)
 ynh_system_user_create $app
@@ -143,6 +157,7 @@ ynh_system_user_create $app
 # Overwrite the php-fpm configuration only if it's allowed
 if [ $overwrite_phpfpm -eq 1 ]
 then
+	ynh_script_progression --message="Reconfigure php-fpm" --weight=2
 	# Create a dedicated php-fpm config
 	ynh_add_fpm_config
 fi
@@ -181,6 +196,7 @@ chown -R $app $final_path/cache $final_path/plugins $final_path/updates
 
 if [ "$upgrade_type" == "UPGRADE_APP" ]
 then
+	ynh_script_progression --message="Upgrade Leed with curl" --weight=4
 	# Clear leed cache
 	ynh_secure_remove $final_path/cache/*
 	# Set the app as temporarily public for curl call
@@ -196,6 +212,7 @@ fi
 #=================================================
 # UPGRADE FAIL2BAN
 #=================================================
+ynh_script_progression --message="Reconfigure fail2ban" --weight=8
 
 # Create a dedicated fail2ban config
 ynh_add_fail2ban_config --logpath="/var/log/nginx/${domain}-error.log" --failregex="PHP message: Leed: wrong login for .* client: <HOST>" --max_retry=5
@@ -203,6 +220,7 @@ ynh_add_fail2ban_config --logpath="/var/log/nginx/${domain}-error.log" --failreg
 #=================================================
 # SETUP SSOWAT
 #=================================================
+ynh_script_progression --message="Reconfigure SSOwat"
 
 # Make app private if necessary
 if [ $is_public -eq 0 ];
@@ -216,12 +234,14 @@ fi
 #=================================================
 # RELOAD NGINX
 #=================================================
+ynh_script_progression --message="Reload nginx" --weight=2
 
 ynh_systemd_action --action=reload --service_name=nginx
 
 #=================================================
 # DEACTIVE MAINTENANCE MODE
 #=================================================
+ynh_script_progression --message="Disable maintenance mode"
 
 ynh_maintenance_mode_OFF
 
@@ -232,9 +252,23 @@ ynh_maintenance_mode_OFF
 # Get main domain and buid the url of the admin panel of the app.
 admin_panel="https://$(grep portal_domain /etc/ssowat/conf.json | cut -d'"' -f4)/yunohost/admin/#/apps/$app"
 
-message="You can configure this app easily by using the experimental config-panel feature: $admin_panel/config-panel.
-You can also find some specific actions for this app by using the experimental action feature: $admin_panel/actions.
+# Build the changelog
+ynh_app_changelog || true
 
-If you're facing an issue or want to improve this app, please open a new issue in this project: https://github.com/YunoHost-Apps/leed_ynh"
+echo "You can configure this app easily by using the experimental __URL_TAG1__config-panel feature__URL_TAG2__$admin_panel/config-panel__URL_TAG3__.
+You can also find some specific actions for this app by using the experimental __URL_TAG1__action feature__URL_TAG2__$admin_panel/actions__URL_TAG3__.
 
-ynh_send_readme_to_admin --app_message="$message" --recipients="$admin" --type="upgrade"
+If you're facing an issue or want to improve this app, please open a new issue in this __URL_TAG1__project__URL_TAG2__https://github.com/YunoHost-Apps/leed_ynh__URL_TAG3__.
+
+---
+
+Changelog since your last upgrade:
+$(cat changelog)" > mail_to_send
+
+ynh_send_readme_to_admin --app_message="mail_to_send" --recipients="$admin" --type="upgrade"
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_script_progression --message="Upgrade completed" --last
