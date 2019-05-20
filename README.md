@@ -39,9 +39,9 @@ Not supported.
 
 #### Supported architectures
 
-* x86-64b - [![](https://ci-apps.yunohost.org/ci/logs/leed%20%28Community%29.svg)](https://ci-apps.yunohost.org/ci/apps/leed/)
-* ARMv8-A - [![](https://ci-apps-arm.yunohost.org/ci/logs/leed%20%28Community%29.svg)](https://ci-apps-arm.yunohost.org/ci/apps/leed/)
-* Jessie x86-64b - [![](https://ci-stretch.nohost.me/ci/logs/leed%20%28Community%29.svg)](https://ci-stretch.nohost.me/ci/apps/leed/)
+* x86-64b - [![](https://ci-apps.yunohost.org/ci/logs/leed%20%28Apps%29.svg)](https://ci-apps.yunohost.org/ci/apps/leed/)
+* ARMv8-A - [![](https://ci-apps-arm.yunohost.org/ci/logs/leed%20%28Apps%29.svg)](https://ci-apps-arm.yunohost.org/ci/apps/leed/)
+* Jessie x86-64b - [![](https://ci-stretch.nohost.me/ci/logs/leed%20%28Apps%29.svg)](https://ci-stretch.nohost.me/ci/apps/leed/)
 
 ## Limitations
 
@@ -51,6 +51,7 @@ Not supported.
 
  * Report a bug: https://github.com/YunoHost-Apps/leed_ynh/issues
  * Leed website: http://leed.idleman.fr/
+ * Leed repository: http://git.idleman.fr/LeedRSS/Leed
  * YunoHost website: https://yunohost.org/
 
 ---
