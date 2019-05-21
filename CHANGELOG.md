@@ -9,7 +9,7 @@ Changelog
 ## 1.8.3~ynh6 ([2019-02-03](https://github.com/YunoHost-Apps/leed_ynh/pull/17))
 
 - [Add progression bar](https://github.com/YunoHost-Apps/leed_ynh/commit/9085643892836479b8c33bba6f5054512e4d441f)
-- [Changelog & html email](https://github.com/YunoHost-Apps/leed_ynh/commit/298f9ebf5767be9c6e163708cc69121a67aca1ed)
+* [Changelog & html email](https://github.com/YunoHost-Apps/leed_ynh/commit/298f9ebf5767be9c6e163708cc69121a67aca1ed)
 - [Update php and nginx conf files to php7](https://github.com/YunoHost-Apps/leed_ynh/commit/1b1b0a4b906edb03a38262f9a63d9d72742480cd)
 
 
@@ -21,7 +21,7 @@ Changelog
 
 ## 1.8.3~ynh4 ([2018-09-30](https://github.com/YunoHost-Apps/leed_ynh/pull/15))
 
-- [Add Panel-config and actions](https://github.com/YunoHost-Apps/leed_ynh/commit/83253f60ff31f0ac7a4fe29e80e79c0cebbd3ad1)
+* [Add Panel-config and actions](https://github.com/YunoHost-Apps/leed_ynh/commit/83253f60ff31f0ac7a4fe29e80e79c0cebbd3ad1)
 
 
 ## 1.8.3~ynh4 ([2018-08-05](https://github.com/YunoHost-Apps/leed_ynh/pull/14))
