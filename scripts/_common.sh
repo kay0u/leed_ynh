@@ -489,7 +489,7 @@ ynh_app_changelog () {
 
     # Clean titles if there's no significative changes
     local line
-    local previous_line
+    local previous_line=""
     while read line <&3
     do
         if [ -n "$previous_line" ]
