@@ -1,0 +1,57 @@
+#!/bin/bash
+
+#=================================================
+# GENERIC STARTING
+#=================================================
+# IMPORT GENERIC HELPERS
+#=================================================
+
+source _common.sh
+source /usr/share/yunohost/helpers
+source _ynh_add_fpm_config
+
+#=================================================
+# RETRIEVE ARGUMENTS
+#=================================================
+
+fpm_usage=""
+fpm_footprint=""
+get_arguments () {
+    # Use ynh_handle_getopts_args into a function to not interfere with $args_array from helpers.
+    legacy_args=uf
+    # Declare an array to define the arguments
+    declare -Ar args_array=( [u]=fpm_usage= [f]=fpm_footprint= )
+    # Manage arguments with getopts
+    ynh_handle_getopts_args "$@"
+}
+get_arguments "$@"
+
+app=${YNH_APP_INSTANCE_NAME:-$YNH_APP_ID}
+
+#=================================================
+# CHECK IF AN ACTION HAS TO BE DONE
+#=================================================
+
+old_fpm_usage=$(ynh_app_setting_get --app=$app --key=fpm_usage)
+old_fpm_footprint=$(ynh_app_setting_get --app=$app --key=fpm_footprint)
+
+if [ "$fpm_usage" == "$old_fpm_usage" ] && [ "$fpm_footprint" == "$old_fpm_footprint" ]
+then
+	ynh_die --message="Nothing to change in PHP configuration." --ret_code=0
+fi
+
+#=================================================
+# SPECIFIC ACTION
+#=================================================
+# RECONFIGURE PHP-FPM CONFIGURATION
+#=================================================
+
+ynh_script_progression --message="Reconfiguring PHP-FPM configuration..." --weight=3
+
+ynh_add_fpm_config --usage=$fpm_usage --footprint=$fpm_footprint
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_script_progression --message="Execution completed" --last

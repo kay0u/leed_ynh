@@ -67,6 +67,10 @@ ynh_add_fpm_config () {
         ynh_replace_string --match_string="__PHPVERSION__" --replace_string="$phpversion" --target_file="$finalphpconf"
 
 	else
+        # Store settings
+        ynh_app_setting_set --app=$app --key=fpm_footprint --value=$footprint
+        ynh_app_setting_set --app=$app --key=fpm_usage --value=$usage
+
         # Usage 2, generate a php-fpm config file with ynh_get_scalable_phpfpm
         ynh_get_scalable_phpfpm --usage=$usage --footprint=$footprint
 
