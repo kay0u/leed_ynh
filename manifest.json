@@ -78,7 +78,11 @@
 					"en": "Is it a public website ?",
 					"fr": "Est-ce un site public ?"
 				},
-				"default": false
+				"default": false,
+				"help": {
+					"en": "A public Leed will be accessible for third party apps. By turning on 'anonymous readers' in Leed configuration, you can made your feeds public.",
+					"fr": "Un Leed public sera accessible pour les applications tierces. En autorisant 'la lecture anonyme' dans la configuration de Leed, vous pouvez rendre vos flux publics."
+				}
 			}
 		]
 	}
