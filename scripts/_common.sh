@@ -427,7 +427,7 @@ ynh_app_changelog () {
     local update_version=$(ynh_read_manifest --manifest="../manifest.json" --manifest_key="version")
 
     # Get the line of the version to update to into the changelog
-    local update_version_line=$(grep --max-count=1 --line-number "^## $update_version" "$original_changelog" | cut -d':' -f1)
+    local update_version_line=$(grep --max-count=1 --line-number "^## \[$update_version" "$original_changelog" | cut -d':' -f1)
     # If there's no entry for this version yet into the changelog
     # Get the first available version
     if [ -z "$update_version_line" ]
@@ -444,7 +444,7 @@ ynh_app_changelog () {
     changelog_length=$(wc --lines "$temp_changelog" | awk '{print $1}')
     # Get the line of the current version into the changelog
     # Keep only the last line found
-    local current_version_line=$(grep --line-number "^## $current_version" "$temp_changelog" | cut -d':' -f1 | tail --lines=1)
+    local current_version_line=$(grep --line-number "^## \[$current_version" "$temp_changelog" | cut -d':' -f1 | tail --lines=1)
     # If there's no entry for this version into the changelog
     # Get the last available version
     if [ -z "$current_version_line" ]
@@ -454,7 +454,7 @@ ynh_app_changelog () {
     # Cut the file before the current version.
     # Then grep the previous version into the changelog to get the line number of the previous version
     local previous_version_line=$(tail --lines=$(( $changelog_length - $current_version_line )) \
-        "$temp_changelog" | grep --max-count=1 --line-number "^##" | cut -d':' -f1)
+        "$temp_changelog" | grep --max-count=1 --line-number "^## " | cut -d':' -f1)
     # If there's no previous version into the changelog
     # Go until the end of the changelog
     if [ -z "$previous_version_line" ]
@@ -473,7 +473,7 @@ ynh_app_changelog () {
     elif [ "$format" = "plain" ]
     then
         # Change title format.
-        ynh_replace_string --match_string="^\(##.* \)(\[\(.*\)\](\(.*\)))" --replace_string="\1- \2 \3" --target_file="$final_changelog"
+        ynh_replace_string --match_string="^##.*\[\(.*\)\](\(.*\)) - \(.*\)$" --replace_string="## \1 (\3) - \2" --target_file="$final_changelog"
         # Change modifications lines format.
         ynh_replace_string --match_string="^\([-*]\).*\[\(.*\)\]\(.*\)" --replace_string="\1 \2 \3" --target_file="$final_changelog"
     fi
