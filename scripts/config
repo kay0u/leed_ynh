@@ -8,6 +8,7 @@
 
 source _common.sh
 source /usr/share/yunohost/helpers
+source _ynh_add_fpm_config
 
 #=================================================
 # RETRIEVE ARGUMENTS
@@ -31,6 +32,7 @@ old_is_public="$(ynh_app_setting_get --app=$app --key=is_public)"
 old_is_public=$(bool_to_true_false $old_is_public)
 is_public="${YNH_CONFIG_MAIN_IS_PUBLIC_IS_PUBLIC:-$old_is_public}"
 
+
 # Overwrite nginx configuration
 old_overwrite_nginx="$(ynh_app_setting_get --app=$app --key=overwrite_nginx)"
 old_overwrite_nginx=$(bool_to_true_false $old_overwrite_nginx)
@@ -41,10 +43,31 @@ old_overwrite_phpfpm="$(ynh_app_setting_get --app=$app --key=overwrite_phpfpm)"
 old_overwrite_phpfpm=$(bool_to_true_false $old_overwrite_phpfpm)
 overwrite_phpfpm="${YNH_CONFIG_MAIN_OVERWRITE_FILES_OVERWRITE_PHPFPM:-$old_overwrite_phpfpm}"
 
+
 # Type of admin mail configuration
 old_admin_mail_html="$(ynh_app_setting_get --app=$app --key=admin_mail_html)"
 old_admin_mail_html=$(bool_to_true_false $old_admin_mail_html)
 admin_mail_html="${YNH_CONFIG_MAIN_GLOBAL_CONFIG_EMAIL_TYPE:-$old_admin_mail_html}"
+
+
+# Footprint for php-fpm
+old_fpm_footprint="$(ynh_app_setting_get --app=$app --key=fpm_footprint)"
+fpm_footprint="${YNH_CONFIG_MAIN_PHP_FPM_CONFIG_FOOTPRINT:-$old_fpm_footprint}"
+
+# Free footprint value for php-fpm
+# Check if fpm_footprint is an integer
+if [ "$fpm_footprint" -eq "$fpm_footprint" ] 2> /dev/null
+then
+    # If fpm_footprint is an integer, that's a numeric value for the footprint
+    old_free_footprint=$fpm_footprint
+else
+    old_free_footprint=0
+fi
+free_footprint="${YNH_CONFIG_MAIN_PHP_FPM_CONFIG_FREE_FOOTPRINT:-$old_free_footprint}"
+
+# Usage for php-fpm
+old_fpm_usage="$(ynh_app_setting_get --app=$app --key=fpm_usage)"
+fpm_usage="${YNH_CONFIG_MAIN_PHP_FPM_CONFIG_USAGE:-$old_fpm_usage}"
 
 #=================================================
 # SHOW_CONFIG FUNCTION FOR 'SHOW' COMMAND
@@ -60,6 +83,10 @@ show_config() {
 	echo "YNH_CONFIG_MAIN_OVERWRITE_FILES_OVERWRITE_PHPFPM=$overwrite_phpfpm"
 
 	echo "YNH_CONFIG_MAIN_GLOBAL_CONFIG_EMAIL_TYPE=$admin_mail_html"
+
+	echo "YNH_CONFIG_MAIN_PHP_FPM_CONFIG_FOOTPRINT=$fpm_footprint"
+	echo "YNH_CONFIG_MAIN_PHP_FPM_CONFIG_FREE_FOOTPRINT=$free_footprint"
+	echo "YNH_CONFIG_MAIN_PHP_FPM_CONFIG_USAGE=$fpm_usage"
 }
 
 #=================================================
@@ -67,6 +94,11 @@ show_config() {
 #=================================================
 
 apply_config() {
+
+    #=================================================
+    # MODIFY PUBLIC ACCESSIBILITY
+    #=================================================
+
 	# Change public accessibility
 	if [ "$is_public" = "true" ]
 	then
@@ -75,6 +107,10 @@ apply_config() {
 		yunohost app action run $app public_private --args is_public=0
 	fi
 
+    #=================================================
+    # MODIFY OVERWRITTING SETTINGS
+    #=================================================
+
 	# Set overwrite_nginx
 	overwrite_nginx=$(bool_to_01 $overwrite_nginx)
 	ynh_app_setting_set --app=$app --key=overwrite_nginx --value="$overwrite_nginx"
@@ -82,9 +118,22 @@ apply_config() {
 	overwrite_phpfpm=$(bool_to_01 $overwrite_phpfpm)
 	ynh_app_setting_set --app=$app --key=overwrite_phpfpm --value="$overwrite_phpfpm"
 
+    #=================================================
+    # MODIFY EMAIL SETTING
+    #=================================================
+
 	# Set admin_mail_html
 	admin_mail_html=$(bool_to_01 $admin_mail_html)
 	ynh_app_setting_set --app=$app --key=admin_mail_html --value="$admin_mail_html"
+
+    #=================================================
+    # RECONFIGURE PHP-FPM
+    #=================================================
+
+    if [ "$fpm_usage" != "$old_fpm_usage" ] || [ "$fpm_footprint" != "$old_fpm_footprint" ]
+    then
+        ynh_add_fpm_config --usage=$fpm_usage --footprint=$fpm_footprint
+    fi
 }
 
 #=================================================
