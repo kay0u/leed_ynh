@@ -8,6 +8,7 @@
 
 source _common.sh
 source /usr/share/yunohost/helpers
+source _ynh_add_fpm_config
 
 #=================================================
 # LOAD SETTINGS
@@ -16,16 +17,20 @@ ynh_script_progression --message="Loading installation settings..." --weight=3
 
 app=$YNH_APP_INSTANCE_NAME
 
-domain=$(ynh_app_setting_get $app domain)
-path_url=$(ynh_app_setting_get $app path)
-admin=$(ynh_app_setting_get $app admin)
-is_public=$(ynh_app_setting_get $app is_public)
-final_path=$(ynh_app_setting_get $app final_path)
-db_pwd=$(ynh_app_setting_get $app mysqlpwd)
-db_name=$(ynh_app_setting_get $app db_name)
-overwrite_nginx=$(ynh_app_setting_get $app overwrite_nginx)
-overwrite_phpfpm=$(ynh_app_setting_get $app overwrite_phpfpm)
-admin_mail_html=$(ynh_app_setting_get $app admin_mail_html)
+domain=$(ynh_app_setting_get --app=$app --key=domain)
+path_url=$(ynh_app_setting_get --app=$app --key=path)
+admin=$(ynh_app_setting_get --app=$app --key=admin)
+is_public=$(ynh_app_setting_get --app=$app --key=is_public)
+final_path=$(ynh_app_setting_get --app=$app --key=final_path)
+db_pwd=$(ynh_app_setting_get --app=$app --key=mysqlpwd)
+db_name=$(ynh_app_setting_get --app=$app --key=db_name)
+
+overwrite_nginx=$(ynh_app_setting_get --app=$app --key=overwrite_nginx)
+overwrite_phpfpm=$(ynh_app_setting_get --app=$app --key=overwrite_phpfpm)
+admin_mail_html=$(ynh_app_setting_get --app=$app --key=admin_mail_html)
+
+fpm_footprint=$(ynh_app_setting_get --app=$app --key=fpm_footprint)
+fpm_usage=$(ynh_app_setting_get --app=$app --key=fpm_usage)
 
 #=================================================
 # CHECK VERSION
@@ -41,32 +46,32 @@ ynh_script_progression --message="Ensuring downward compatibility..."
 # If final_path doesn't exist, create it
 if [ -z "$final_path" ]; then
 	final_path=/var/www/$app
-	ynh_app_setting_set $app final_path $final_path
+	ynh_app_setting_set --app=$app --key=final_path --value=$final_path
 fi
 
 # If db_name doesn't exist, create it
 if [ -z "$db_name" ]; then
-	db_name=$(ynh_make_valid_dbid $app)
-	ynh_app_setting_set $app db_name $db_name
+	db_name=$(ynh_sanitize_dbid --db_name=$app)
+	ynh_app_setting_set --app=$app --key=db_name --value=$db_name
 fi
 
 # If is_public doesn't exist, create it
 if [ -z "$is_public" ]; then
-	public_check=$(ynh_app_setting_get $app skipped_uris)
+	public_check=$(ynh_app_setting_get --app=$app --key=skipped_uris)
 	# If skipped_uris is empty, that was a public installation.
 	if [ -z "$public_check" ]; then
 		is_public=1
 	else
 		is_public=0
 	fi
-	ynh_app_setting_set $app is_public $is_public
+	ynh_app_setting_set --app=$app --key=is_public --value=$is_public
 else
 	# Fix is_public as a boolean
 	if [ "$is_public" = "Yes" ]; then
-		ynh_app_setting_set $app is_public 1
+		ynh_app_setting_set --app=$app --key=is_public --value=1
 		is_public=1
 	elif [ "$is_public" = "No" ]; then
-		ynh_app_setting_set $app is_public 0
+		ynh_app_setting_set --app=$app --key=is_public --value=0
 		is_public=0
 	fi
 fi
@@ -74,19 +79,19 @@ fi
 # If overwrite_nginx doesn't exist, create it
 if [ -z "$overwrite_nginx" ]; then
 	overwrite_nginx=1
-	ynh_app_setting_set $app overwrite_nginx $overwrite_nginx
+	ynh_app_setting_set --app=$app --key=overwrite_nginx --value=$overwrite_nginx
 fi
 
 # If overwrite_phpfpm doesn't exist, create it
 if [ -z "$overwrite_phpfpm" ]; then
 	overwrite_phpfpm=1
-	ynh_app_setting_set $app overwrite_phpfpm $overwrite_phpfpm
+	ynh_app_setting_set --app=$app --key=overwrite_phpfpm --value=$overwrite_phpfpm
 fi
 
 # If admin_mail_html doesn't exist, create it
 if [ -z "$admin_mail_html" ]; then
 	admin_mail_html=1
-	ynh_app_setting_set $app admin_mail_html $admin_mail_html
+	ynh_app_setting_set --app=$app --key=admin_mail_html --value=$admin_mail_html
 fi
 
 #=================================================
@@ -108,7 +113,7 @@ ynh_abort_if_errors
 #=================================================
 
 # Normalize the URL path syntax
-path_url=$(ynh_normalize_url_path $path_url)
+path_url=$(ynh_normalize_url_path --path_url=$path_url)
 
 #=================================================
 # ACTIVATE MAINTENANCE MODE
@@ -127,7 +132,7 @@ if [ "$upgrade_type" == "UPGRADE_APP" ]
 then
 	ynh_script_progression --message="Upgrading source files..." --weight=3
 	# Download, check integrity, uncompress and patch the source from app.src
-	ynh_setup_source "$final_path"
+	ynh_setup_source --dest_dir="$final_path"
 fi
 
 #=================================================
@@ -148,7 +153,7 @@ fi
 ynh_script_progression --message="Making sure dedicated system user exists..."
 
 # Create a dedicated user (if not existing)
-ynh_system_user_create $app
+ynh_system_user_create --username=$app
 
 #=================================================
 # PHP-FPM CONFIGURATION
@@ -159,7 +164,7 @@ if [ $overwrite_phpfpm -eq 1 ]
 then
 	ynh_script_progression --message="Upgrading php-fpm configuration..." --weight=2
 	# Create a dedicated php-fpm config
-	ynh_add_fpm_config
+	ynh_add_fpm_config --usage=$fpm_usage --footprint=$fpm_footprint
 fi
 
 #=================================================
@@ -174,10 +179,10 @@ code_sync=$(mysql -h localhost -u $db_name -p$db_pwd -s $db_name -e 'SELECT valu
 # SETUP CRON FILE FOR SYNCHRONISATION
 #=================================================
 
-ynh_replace_string "__ADMIN__" "$admin" ../conf/cron_leed
-ynh_replace_string "__DOMAIN__" "$domain" ../conf/cron_leed
-ynh_replace_string "__PATH__" "$path_url" ../conf/cron_leed
-ynh_replace_string "__CODESYNC__" "$code_sync" ../conf/cron_leed
+ynh_replace_string --match_string="__ADMIN__" --replace_string="$admin" --target_file=../conf/cron_leed
+ynh_replace_string --match_string="__DOMAIN__" --replace_string="$domain" --target_file=../conf/cron_leed
+ynh_replace_string --match_string="__PATH__" --replace_string="$path_url" --target_file=../conf/cron_leed
+ynh_replace_string --match_string="__CODESYNC__" --replace_string="$code_sync" --target_file=../conf/cron_leed
 cp ../conf/cron_leed /etc/cron.d/$app
 
 #=================================================
@@ -187,6 +192,8 @@ cp ../conf/cron_leed /etc/cron.d/$app
 # Set permissions on app files
 chown -R root: $final_path
 # $app need write permissions in plugins, cache and updates
+# Clear leed cache
+ynh_secure_remove --file=$final_path/cache
 mkdir -p $final_path/cache
 chown -R $app $final_path/cache $final_path/plugins $final_path/updates
 
@@ -197,10 +204,8 @@ chown -R $app $final_path/cache $final_path/plugins $final_path/updates
 if [ "$upgrade_type" == "UPGRADE_APP" ]
 then
 	ynh_script_progression --message="Upgrading Leed with curl..." --weight=4
-	# Clear leed cache
-	ynh_secure_remove $final_path/cache/*
 	# Set the app as temporarily public for curl call
-	ynh_app_setting_set $app unprotected_uris "/"
+	ynh_app_setting_set --app=$app --key=unprotected_uris --value="/"
 	# Regen SSOwat configuration
 	yunohost app ssowatconf
 	# Start the upgrade procedure of leed.
@@ -223,12 +228,12 @@ ynh_add_fail2ban_config --logpath="/var/log/nginx/${domain}-error.log" --failreg
 ynh_script_progression --message="Upgrading SSOwat configuration..."
 
 # Make app private if necessary
-if [ $is_public -eq 0 ];
+if [ $is_public -eq 0 ]
 then
 	# Remove the public access
-	ynh_app_setting_delete $app unprotected_uris
+	ynh_app_setting_delete --app=$app --key=unprotected_uris
 	# Set the action.php script public for the cron task
-	ynh_app_setting_set $app skipped_uris "/action.php"
+	ynh_app_setting_set --app=$app --key=skipped_uris --value="/action.php"
 fi
 
 #=================================================
@@ -236,7 +241,7 @@ fi
 #=================================================
 ynh_script_progression --message="Reloading nginx web server..." --weight=2
 
-ynh_systemd_action --action=reload --service_name=nginx
+ynh_systemd_action --service_name=nginx --action=reload
 
 #=================================================
 # DEACTIVE MAINTENANCE MODE
@@ -265,7 +270,7 @@ If you're facing an issue or want to improve this app, please open a new issue i
 Changelog since your last upgrade:
 $(cat changelog)" > mail_to_send
 
-ynh_send_readme_to_admin --app_message="mail_to_send" --recipients="$admin" --type="upgrade"
+ynh_send_readme_to_admin --app_message="mail_to_send" --recipients="$admin" --type=upgrade
 
 #=================================================
 # END OF SCRIPT

@@ -8,6 +8,7 @@
 
 source _common.sh
 source /usr/share/yunohost/helpers
+source _ynh_add_fpm_config
 
 #=================================================
 # MANAGE FAILURE OF THE SCRIPT
@@ -35,26 +36,23 @@ app=$YNH_APP_INSTANCE_NAME
 ynh_script_progression --message="Validating installation parameters..." --weight=2
 
 final_path=/var/www/$app
-test ! -e "$final_path" || ynh_die "This path already contains a folder"
-
-# Normalize the url path syntax
-path_url=$(ynh_normalize_url_path $path_url)
+test ! -e "$final_path" || ynh_die --message="This path already contains a folder"
 
 # Register (book) web path
-ynh_webpath_register $app $domain $path_url
+ynh_webpath_register --app=$app --domain=$domain --path_url=$path_url
 
 #=================================================
 # STORE SETTINGS FROM MANIFEST
 #=================================================
 ynh_script_progression --message="Storing installation settings..." --weight=2
 
-ynh_app_setting_set $app admin $admin
-ynh_app_setting_set $app language $language
-ynh_app_setting_set $app domain $domain
+ynh_app_setting_set --app=$app --key=admin --value=$admin
+ynh_app_setting_set --app=$app --key=language --value=$language
+ynh_app_setting_set --app=$app --key=domain --value=$domain
 
-ynh_app_setting_set $app overwrite_nginx "1"
-ynh_app_setting_set $app overwrite_phpfpm "1"
-ynh_app_setting_set $app admin_mail_html "1"
+ynh_app_setting_set --app=$app --key=overwrite_nginx --value=1
+ynh_app_setting_set --app=$app --key=overwrite_phpfpm --value=1
+ynh_app_setting_set --app=$app --key=admin_mail_html --value=1
 
 #=================================================
 # STANDARD MODIFICATIONS
@@ -63,18 +61,18 @@ ynh_app_setting_set $app admin_mail_html "1"
 #=================================================
 ynh_script_progression --message="Creating a MySQL database..."
 
-db_name=$(ynh_sanitize_dbid $app)
-ynh_app_setting_set $app db_name $db_name
-ynh_mysql_setup_db $db_name $db_name
+db_name=$(ynh_sanitize_dbid --db_name=$app)
+ynh_app_setting_set --app=$app --key=db_name --value=$db_name
+ynh_mysql_setup_db --db_user=$db_name --db_name=$db_name
 
 #=================================================
 # DOWNLOAD, CHECK AND UNPACK SOURCE
 #=================================================
 ynh_script_progression --message="Setting up source files..." --weight=3
 
-ynh_app_setting_set $app final_path $final_path
-# Download, check integrity and uncompress the source from app.src
-ynh_setup_source "$final_path"
+ynh_app_setting_set --app=$app --key=final_path --value=$final_path
+# Download, check integrity, uncompress and patch the source from app.src
+ynh_setup_source --dest_dir="$final_path"
 
 #=================================================
 # NGINX CONFIGURATION
@@ -90,7 +88,7 @@ ynh_add_nginx_config
 ynh_script_progression --message="Configuring system user..." --weight=2
 
 # Create a dedicated system user
-ynh_system_user_create $app
+ynh_system_user_create --username=$app
 
 #=================================================
 # PHP-FPM CONFIGURATION
@@ -98,7 +96,7 @@ ynh_system_user_create $app
 ynh_script_progression --message="Configuring php-fpm..." --weight=2
 
 # Create a dedicated php-fpm config
-ynh_add_fpm_config
+ynh_add_fpm_config --usage=low --footprint=low
 
 #=================================================
 # SPECIFIC SETUP
@@ -111,12 +109,12 @@ ynh_script_progression --message="Installing Leed with Curl..." --weight=5
 chown -R $app: $final_path
 
 # Set the app as temporarily public for curl call
-ynh_app_setting_set $app unprotected_uris "/"
+ynh_app_setting_set --app=$app --key=unprotected_uris --value="/"
 # Regen SSOwat configuration
 yunohost app ssowatconf
 
 # Reload Nginx
-ynh_systemd_action --action=reload --service_name=nginx
+ynh_systemd_action --service_name=nginx --action=reload
 
 # Leed installation via curl
 ynh_print_OFF
@@ -134,10 +132,10 @@ code_sync=$(mysql -h localhost -u $db_name -p$db_pwd -s $db_name -e 'SELECT valu
 #=================================================
 ynh_script_progression --message="Setting up a cron file..."
 
-ynh_replace_string "__ADMIN__" "$admin" ../conf/cron_leed
-ynh_replace_string "__DOMAIN__" "$domain" ../conf/cron_leed
-ynh_replace_string "__PATH__" "$path_url" ../conf/cron_leed
-ynh_replace_string "__CODESYNC__" "$code_sync" ../conf/cron_leed
+ynh_replace_string --match_string="__ADMIN__" --replace_string="$admin" --target_file=../conf/cron_leed
+ynh_replace_string --match_string="__DOMAIN__" --replace_string="$domain" --target_file=../conf/cron_leed
+ynh_replace_string --match_string="__PATH__" --replace_string="$path_url" --target_file=../conf/cron_leed
+ynh_replace_string --match_string="__CODESYNC__" --replace_string="$code_sync" --target_file=../conf/cron_leed
 cp ../conf/cron_leed /etc/cron.d/$app
 
 #=================================================
@@ -166,13 +164,13 @@ ynh_add_fail2ban_config --logpath="/var/log/nginx/${domain}-error.log" --failreg
 ynh_script_progression --message="Configuring SSOwat..." --weight=2
 
 # Make app private if necessary
-ynh_app_setting_set $app is_public "$is_public"
+ynh_app_setting_set --app=$app --key=is_public --value="$is_public"
 if [ $is_public -eq 0 ];
 then
 	# Remove the public access
-	ynh_app_setting_delete $app unprotected_uris
+	ynh_app_setting_delete --app=$app --key=unprotected_uris
 	# Set the action.php script public for the cron task
-	ynh_app_setting_set $app skipped_uris "/action.php"
+	ynh_app_setting_set --app=$app --key=skipped_uris --value="/action.php"
 fi
 
 #=================================================
@@ -180,7 +178,7 @@ fi
 #=================================================
 ynh_script_progression --message="Reloading nginx web server..." --weight=3
 
-ynh_systemd_action --action=reload --service_name=nginx
+ynh_systemd_action --service_name=nginx --action=reload
 
 #=================================================
 # SEND A README FOR THE ADMIN
@@ -197,7 +195,7 @@ You can also find some specific actions for this app by using the experimental _
 
 If you're facing an issue or want to improve this app, please open a new issue in this __URL_TAG1__project__URL_TAG2__https://github.com/YunoHost-Apps/leed_ynh__URL_TAG3__." > mail_to_send
 
-ynh_send_readme_to_admin --app_message="mail_to_send" --recipients="$admin" --type="install"
+ynh_send_readme_to_admin --app_message="mail_to_send" --recipients="$admin" --type=install
 ynh_print_ON
 
 #=================================================

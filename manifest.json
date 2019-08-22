@@ -6,7 +6,7 @@
 		"en": "Leed is a minimalistic RSS feed aggregator which allows quick and non-intrusive reading of feeds.",
 		"fr": "Leed est un agrégateur RSS minimaliste qui permet la consultation de flux RSS de manière rapide et non intrusive."
 	},
-	"version": "1.8.3~ynh7",
+	"version": "1.8.3~ynh8",
 	"url": "http://leed.idleman.fr/",
 	"license": "AGPL-3.0",
 	"maintainer": {
@@ -14,7 +14,7 @@
 		"email": "maniackc_dev@crudelis.fr"
 	},
 	"requirements": {
-		"yunohost": ">= 3.4"
+		"yunohost": ">= 3.5"
 	},
 	"multi_instance": true,
 	"services": [
@@ -78,7 +78,11 @@
 					"en": "Is it a public website ?",
 					"fr": "Est-ce un site public ?"
 				},
-				"default": false
+				"default": false,
+				"help": {
+					"en": "A public Leed will be accessible for third party apps. By turning on 'anonymous readers' in Leed configuration, you can made your feeds public.",
+					"fr": "Un Leed public sera accessible pour les applications tierces. En autorisant 'la lecture anonyme' dans la configuration de Leed, vous pouvez rendre vos flux publics."
+				}
 			}
 		]
 	}
