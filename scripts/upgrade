@@ -94,6 +94,18 @@ if [ -z "$admin_mail_html" ]; then
 	ynh_app_setting_set --app=$app --key=admin_mail_html --value=$admin_mail_html
 fi
 
+# If fpm_footprint doesn't exist, create it
+if [ -z "$fpm_footprint" ]; then
+	fpm_footprint=low
+	ynh_app_setting_set --app=$app --key=fpm_footprint --value=$fpm_footprint
+fi
+
+# If fpm_usage doesn't exist, create it
+if [ -z "$fpm_usage" ]; then
+	fpm_usage=low
+	ynh_app_setting_set --app=$app --key=fpm_usage --value=$fpm_usage
+fi
+
 #=================================================
 # BACKUP BEFORE UPGRADE THEN ACTIVE TRAP
 #=================================================
