@@ -390,7 +390,7 @@ ynh_maintenance_mode_OFF () {
 
 # Create a changelog for an app after an upgrade from the file CHANGELOG.md.
 #
-# usage: ynh_send_readme_to_admin [--format=markdown/html/plain] [--output=changelog_file] --changelog=changelog_source]
+# usage: ynh_app_changelog [--format=markdown/html/plain] [--output=changelog_file] --changelog=changelog_source]
 # | arg: -f --format= - Format in which the changelog will be printed
 #       markdown: Default format.
 #       html:     Turn urls into html format.
