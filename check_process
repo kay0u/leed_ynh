@@ -25,7 +25,7 @@
 	Level 5=auto
 ;;; Options
 Email=
-Notification=down
+Notification=change
 ;;; Upgrade options
 	; commit=8b622d430db9ab860aee156a32086507669243fd
 		name=MAJ 1.8.2
