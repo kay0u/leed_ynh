@@ -95,13 +95,16 @@ apply_config() {
     # MODIFY PUBLIC ACCESSIBILITY
     #=================================================
 
-	# Change public accessibility
-	if [ $is_public -eq 1 ]
-	then
-		yunohost app action run $app public_private --args is_public=1
-	else
-		yunohost app action run $app public_private --args is_public=0
-	fi
+    # Change public accessibility
+    if [ "$is_public" != "$old_is_public" ]
+    then
+        if [ "$is_public" = "1" ]
+        then
+            yunohost app action run $app public_private --args is_public=1
+        else
+            yunohost app action run $app public_private --args is_public=0
+        fi
+    fi
 
     #=================================================
     # MODIFY OVERWRITTING SETTINGS
