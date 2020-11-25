@@ -11,7 +11,7 @@ Si vous n'avez pas YunoHost, merci de regarder [ici](https://yunohost.org/#/inst
 ## Résumé
 Leed (contraction de Light Feed) est un agrégateur RSS/ATOM minimaliste qui permet la consultation de flux RSS de manière rapide et non intrusive.
 
-**Version embarquée:** 1.8.3
+**Version embarquée :** 1.8.3
 
 ## Captures d'écran
 
@@ -27,11 +27,11 @@ Utiliser le panneau d'administration de votre Jenkins pour configurer cette appl
 
 ## Documentation
 
- * Documentation YunoHost: Il n'y a pas d'autre documentation, n'hésitez pas à contribuer.
+ * Documentation YunoHost : Il n'y a pas d'autre documentation, n'hésitez pas à contribuer.
 
 ## Fonctionnalités spécifiques à YunoHost
 
-* Login sécurisé par fail2ban
+* Login sécurisé par Fail2Ban
 
 #### Support multi-utilisateurs
 
@@ -46,10 +46,10 @@ Non supportée.
 
 ## Liens
 
- * Reporter un bug: https://github.com/YunoHost-Apps/leed_ynh/issues
- * Site de Leed: http://leed.idleman.fr/
- * Dépôt de Leed: http://git.idleman.fr/LeedRSS/Leed
- * Site de YunoHost: https://yunohost.org/
+ * Reporter un bug : https://github.com/YunoHost-Apps/leed_ynh/issues
+ * Site de Leed : http://leed.idleman.fr/
+ * Dépôt de Leed : http://git.idleman.fr/LeedRSS/Leed
+ * Site de YunoHost : https://yunohost.org/
 
 ---
 

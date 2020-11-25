@@ -31,7 +31,7 @@ Use the admin panel of your Leed to configure this app.
 
 ## YunoHost specific features
 
-* Login secured by fail2ban
+* Login secured by Fail2Ban
 
 #### Multi-users support
 
