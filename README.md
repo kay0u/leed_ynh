@@ -39,9 +39,8 @@ Not supported.
 
 #### Supported architectures
 
-* x86-64b - [![](https://ci-apps.yunohost.org/ci/logs/leed%20%28Apps%29.svg)](https://ci-apps.yunohost.org/ci/apps/leed/)
+* x86-64 - [![](https://ci-apps.yunohost.org/ci/logs/leed%20%28Apps%29.svg)](https://ci-apps.yunohost.org/ci/apps/leed/)
 * ARMv8-A - [![](https://ci-apps-arm.yunohost.org/ci/logs/leed%20%28Apps%29.svg)](https://ci-apps-arm.yunohost.org/ci/apps/leed/)
-* Jessie x86-64b - [![](https://ci-stretch.nohost.me/ci/logs/leed%20%28Apps%29.svg)](https://ci-stretch.nohost.me/ci/apps/leed/)
 
 ## Limitations
 
@@ -56,8 +55,7 @@ Not supported.
 
 ---
 
-Developers infos
-----------------
+## Developers infos
 
 Please do your pull request to the [testing branch](https://github.com/YunoHost-Apps/leed_ynh/tree/testing).
 
