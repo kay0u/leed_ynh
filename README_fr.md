@@ -1,7 +1,7 @@
 # Leed pour YunoHost
 
 [![Niveau d'intégration](https://dash.yunohost.org/integration/leed.svg)](https://dash.yunohost.org/appci/app/leed) ![](https://ci-apps.yunohost.org/ci/badges/leed.status.svg) ![](https://ci-apps.yunohost.org/ci/badges/leed.maintain.svg)  
-[![Installer Leed avec YunoHost](https://install-app.yunohost.org/install-with-yunohost.png)](https://install-app.yunohost.org/?app=leed)
+[![Installer Leed avec YunoHost](https://install-app.yunohost.org/install-with-yunohost.svg)](https://install-app.yunohost.org/?app=leed)
 
 *[Read this readme in english.](./README.md)*
 
