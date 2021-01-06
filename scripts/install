@@ -70,6 +70,8 @@ ynh_mysql_setup_db --db_user=$db_name --db_name=$db_name
 #=================================================
 ynh_script_progression --message="Setting up source files..." --weight=3
 
+read -p
+
 ynh_app_setting_set --app=$app --key=final_path --value=$final_path
 # Download, check integrity, uncompress and patch the source from app.src
 ynh_setup_source --dest_dir="$final_path"
@@ -132,7 +134,6 @@ code_sync=$(mysql -h localhost -u $db_name -p$db_pwd -s $db_name -e 'SELECT valu
 #=================================================
 ynh_script_progression --message="Setting up a cron file..."
 
-ynh_replace_string --match_string="__ADMIN__" --replace_string="$admin" --target_file=../conf/cron_leed
 ynh_replace_string --match_string="__DOMAIN__" --replace_string="$domain" --target_file=../conf/cron_leed
 ynh_replace_string --match_string="__PATH__" --replace_string="$path_url" --target_file=../conf/cron_leed
 ynh_replace_string --match_string="__CODESYNC__" --replace_string="$code_sync" --target_file=../conf/cron_leed
